@@ -11,6 +11,7 @@ import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
 import { Products } from './collections/Products'
 import { Dealers } from './collections/Dealers'
+import { Teams } from './collections/Teams'
 import { Pages } from './collections/Pages'
 import { Orders } from './collections/Orders'
 import { Home } from './globals/Home'
@@ -27,7 +28,7 @@ export default buildConfig({
       titleSuffix: ' · Bulltron Race',
     },
   },
-  collections: [Products, Categories, Dealers, Orders, Pages, Media, Users],
+  collections: [Products, Categories, Dealers, Teams, Orders, Pages, Media, Users],
   globals: [Home, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

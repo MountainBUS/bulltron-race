@@ -6,6 +6,7 @@ import * as migration_20260914_105757_kategorie_zuweisung from './20260914_10575
 import * as migration_20260914_125405_preisliste_082026 from './20260914_125405_preisliste_082026';
 import * as migration_20260914_125701_erreichbarkeit from './20260914_125701_erreichbarkeit';
 import * as migration_20260914_144854_lieferzeit_felder from './20260914_144854_lieferzeit_felder';
+import * as migration_20260914_150322_rennteams from './20260914_150322_rennteams';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20260914_144854_lieferzeit_felder.up,
     down: migration_20260914_144854_lieferzeit_felder.down,
-    name: '20260914_144854_lieferzeit_felder'
+    name: '20260914_144854_lieferzeit_felder',
+  },
+  {
+    up: migration_20260914_150322_rennteams.up,
+    down: migration_20260914_150322_rennteams.down,
+    name: '20260914_150322_rennteams'
   },
 ];

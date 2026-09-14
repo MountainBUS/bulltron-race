@@ -99,3 +99,28 @@ export const getAllPages = cache(async () => {
   const res = await payload.find({ collection: 'pages', limit: 100, depth: 0 })
   return res.docs
 })
+
+/* ------------------------------------------------------------ Rennteams -- */
+
+export const getTeams = cache(async () => {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'teams',
+    where: { published: { equals: true } },
+    limit: 200,
+    sort: ['-featured', 'sortOrder', 'teamName'],
+    depth: 2,
+  })
+  return res.docs
+})
+
+export const getTeamBySlug = cache(async (slug: string) => {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'teams',
+    where: { slug: { equals: slug }, published: { equals: true } },
+    limit: 1,
+    depth: 2,
+  })
+  return res.docs[0] ?? null
+})

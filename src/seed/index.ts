@@ -384,6 +384,7 @@ export const seed = async () => {
         { label: 'Rennsport', url: '/rennsportbatterien' },
         { label: 'Motorrad', url: '/motorradbatterien' },
         { label: 'Händler', url: '/haendler' },
+        { label: 'Teams', url: '/teams' },
       ],
       headerCtaLabel: 'Beratung',
       headerCtaUrl: 'tel:+4936134948420',
@@ -414,6 +415,7 @@ export const seed = async () => {
           title: 'Service',
           links: [
             { label: 'Händler und Einbaupartner', url: '/haendler' },
+            { label: 'Teams und Fahrer', url: '/teams' },
             { label: 'Beratung anrufen', url: 'tel:+4936134948420' },
             { label: 'E-Mail schreiben', url: 'mailto:info@bulltron-race.de' },
             { label: 'Warenkorb', url: '/warenkorb' },

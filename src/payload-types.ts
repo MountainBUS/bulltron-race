@@ -70,6 +70,7 @@ export interface Config {
     products: Product;
     categories: Category;
     dealers: Dealer;
+    teams: Team;
     orders: Order;
     pages: Page;
     media: Media;
@@ -88,6 +89,7 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     dealers: DealersSelect<false> | DealersSelect<true>;
+    teams: TeamsSelect<false> | TeamsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -446,6 +448,153 @@ export interface Dealer {
   createdAt: string;
 }
 /**
+ * Ein Eintrag je Rennteam, entsprechend dem Fragebogen. Jeder Eintrag bekommt eine eigene Seite unter /teams. Felder, die leer bleiben, erscheinen auf der Seite nicht — es ist also kein Problem, einen Bogen nur teilweise ausgefüllt zu übernehmen.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "teams".
+ */
+export interface Team {
+  id: number;
+  teamName: string;
+  /**
+   * Wird automatisch aus dem Titel erzeugt, kann aber überschrieben werden.
+   */
+  slug: string;
+  published?: boolean | null;
+  /**
+   * Erscheint in der Übersicht ganz oben und mit Rahmen.
+   */
+  featured?: boolean | null;
+  /**
+   * Kleinere Zahl steht weiter vorn. Bei gleicher Zahl zählt der Teamname.
+   */
+  sortOrder?: number | null;
+  /**
+   * Je Fahrer ein Eintrag. Erscheint auf der Teamseite und in der Übersicht.
+   */
+  drivers?:
+    | {
+        name: string;
+        /**
+         * Optional, z. B. „Stammfahrer“ oder „Teamchef“.
+         */
+        role?: string | null;
+        photo?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  location?: string | null;
+  series?: string | null;
+  /**
+   * Wer seid ihr, wie seid ihr zum Rennsport gekommen und was zeichnet euch aus? Antwort des Teams, bitte nicht umschreiben.
+   */
+  intro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  /**
+   * Aus: Name und E-Mail stehen nur im Backend. An: beides erscheint auf der Teamseite. Bitte nur mit Einverständnis des Teams einschalten.
+   */
+  contactPublic?: boolean | null;
+  /**
+   * Mit oder ohne https:// — wird beim Speichern ergänzt.
+   */
+  website?: string | null;
+  social?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Setzt das Team mehrere Fahrzeuge ein, bekommt jedes einen eigenen Eintrag.
+   */
+  vehicles?:
+    | {
+        manufacturer?: string | null;
+        model?: string | null;
+        year?: string | null;
+        engine?: string | null;
+        modifications?: string | null;
+        /**
+         * Verknüpft die Teamseite mit der Produktseite. Steht das Modell nicht zur Auswahl, das Feld darunter benutzen.
+         */
+        battery?: (number | null) | Product;
+        /**
+         * Nur nötig, wenn das eingesetzte Modell nicht im Shop steht — etwa eine Sonderanfertigung.
+         */
+        batteryOther?: string | null;
+        /**
+         * So, wie das Team es angegeben hat, z. B. „Saison 2024“ oder „März 2025“.
+         */
+        since?: string | null;
+        reason?: string | null;
+        experience?: string | null;
+        photo?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  results?:
+    | {
+        date?: string | null;
+        event: string;
+        placement?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  pastAchievements?:
+    | {
+        year?: string | null;
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Vergangene Termine verschwinden auf der Website von selbst, sobald das Datum vorbei ist.
+   */
+  upcoming?:
+    | {
+        date: string;
+        event: string;
+        track?: string | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  logo?: (number | null) | Media;
+  /**
+   * Erscheint in der Übersicht und oben auf der Teamseite. Ohne Bild bleibt dort der Markenhintergrund.
+   */
+  mainImage?: (number | null) | Media;
+  gallery?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Nur im Backend sichtbar, erscheint nicht auf der Website.
+   */
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Wird automatisch von Stripe befüllt. Zahlungsdaten liegen ausschließlich bei Stripe.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -591,6 +740,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'dealers';
         value: number | Dealer;
+      } | null)
+    | ({
+        relationTo: 'teams';
+        value: number | Team;
       } | null)
     | ({
         relationTo: 'orders';
@@ -796,6 +949,91 @@ export interface DealersSelect<T extends boolean = true> {
   services?: T;
   description?: T;
   logo?: T;
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "teams_select".
+ */
+export interface TeamsSelect<T extends boolean = true> {
+  teamName?: T;
+  slug?: T;
+  published?: T;
+  featured?: T;
+  sortOrder?: T;
+  drivers?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        photo?: T;
+        id?: T;
+      };
+  location?: T;
+  series?: T;
+  intro?: T;
+  contactName?: T;
+  contactEmail?: T;
+  contactPublic?: T;
+  website?: T;
+  social?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  vehicles?:
+    | T
+    | {
+        manufacturer?: T;
+        model?: T;
+        year?: T;
+        engine?: T;
+        modifications?: T;
+        battery?: T;
+        batteryOther?: T;
+        since?: T;
+        reason?: T;
+        experience?: T;
+        photo?: T;
+        id?: T;
+      };
+  results?:
+    | T
+    | {
+        date?: T;
+        event?: T;
+        placement?: T;
+        id?: T;
+      };
+  pastAchievements?:
+    | T
+    | {
+        year?: T;
+        title?: T;
+        id?: T;
+      };
+  upcoming?:
+    | T
+    | {
+        date?: T;
+        event?: T;
+        track?: T;
+        url?: T;
+        id?: T;
+      };
+  logo?: T;
+  mainImage?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
   internalNote?: T;
   updatedAt?: T;
   createdAt?: T;
