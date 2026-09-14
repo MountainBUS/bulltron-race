@@ -1,0 +1,37 @@
+# /etc/systemd/system/bulltron-race.service
+#
+# Startet die Anwendung beim Booten und nach jedem Absturz neu.
+#   systemctl daemon-reload
+#   systemctl enable --now bulltron-race
+#   systemctl status bulltron-race
+#   journalctl -u bulltron-race -f      # Log mitlesen
+
+[Unit]
+Description=Bulltron Race — Next.js und Payload CMS
+After=network.target
+
+[Service]
+Type=simple
+User=bulltron
+Group=bulltron
+WorkingDirectory=/var/www/bulltron-race
+EnvironmentFile=/var/www/bulltron-race/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node /var/www/bulltron-race/node_modules/next/dist/bin/next start -p 3000
+Restart=always
+RestartSec=5
+
+# Etwas Absicherung: der Dienst darf nur in sein eigenes Verzeichnis schreiben.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/www/bulltron-race
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bulltron-race
+
+[Install]
+WantedBy=multi-user.target

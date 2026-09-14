@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+public/media/*
+!public/media/.gitkeep
+docs
+*.zip
+tsconfig.tsbuildinfo

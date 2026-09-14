@@ -1,0 +1,24 @@
+<style>
+  @font-face { font-family: 'Barlow Condensed'; src: url('fonts/barlow-condensed-latin-700-normal.woff2') format('woff2'); font-weight: 700; }
+  @font-face { font-family: 'Barlow Condensed'; src: url('fonts/barlow-condensed-latin-800-normal.woff2') format('woff2'); font-weight: 800; }
+  @font-face { font-family: 'Barlow'; src: url('fonts/barlow-latin-700-normal.woff2') format('woff2'); font-weight: 700; }
+  body { margin: 0; background: #7a7d82; }
+  canvas { width: 900px; height: auto; display: block; margin: 0 0 14px 0; }
+</style>
+<script type="module">
+import { etikettZeichnen, schriftenLaden } from './etikett.js'
+import { MODELLE } from './modelle.js'
+const logo = new Image()
+logo.src = 'logo.png'
+await new Promise((f) => { logo.onload = f })
+window.dehnungen = []
+await schriftenLaden()
+const welche = new URLSearchParams(location.search).get('m')
+for (const schluessel of (welche ? [welche] : Object.keys(MODELLE))) {
+  const c = document.createElement('canvas')
+  document.body.appendChild(c)
+  etikettZeichnen(c, logo, MODELLE[schluessel])
+}
+console.log('Dehnungen: ' + JSON.stringify(window.dehnungen))
+window.fertig = true
+</script>

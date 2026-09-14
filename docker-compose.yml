@@ -1,0 +1,34 @@
+# Manueller Betrieb ohne Coolify — für Coolify wird diese Datei nicht gebraucht,
+# dort werden Domain, Port und Volume im Oberflächen-Formular gesetzt.
+#
+#   docker compose up -d --build
+#   docker compose exec bulltron-race npm run seed    # nur beim ersten Start
+#
+services:
+  bulltron-race:
+    build:
+      context: .
+      # NEXT_PUBLIC_* schreibt Next beim Build fest in den Code. Zur Laufzeit
+      # gesetzt haetten sie keine Wirkung mehr, deshalb stehen sie hier.
+      args:
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://dev.bulltron-race.de}
+        NEXT_PUBLIC_SHOP_ENABLED: ${NEXT_PUBLIC_SHOP_ENABLED:-false}
+    image: bulltron-race:latest
+    container_name: bulltron-race
+    restart: unless-stopped
+    environment:
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET fehlt}
+      DATABASE_URI: file:/data/bulltron.db
+      MEDIA_DIR: /data/media
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      DEV_AUTH_USER: ${DEV_AUTH_USER:-}
+      DEV_AUTH_PASSWORD: ${DEV_AUTH_PASSWORD:-}
+    volumes:
+      - bulltron-data:/data
+    ports:
+      # Host-Port 3001, damit nichts mit anderen Anwendungen auf 3000 kollidiert.
+      - "127.0.0.1:3001:3000"
+
+volumes:
+  bulltron-data:
