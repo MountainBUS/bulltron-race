@@ -1186,12 +1186,20 @@ export interface SiteSetting {
     | null;
   copyright?: string | null;
   paymentNote?: string | null;
+  /**
+   * Dieser Betrag wird beim Kauf tatsächlich abgebucht. Lithium-Batterien sind Gefahrgut — bitte gegen die echten Konditionen des Versanddienstleisters prüfen.
+   */
   shippingCost?: number | null;
   /**
    * 0 = nie versandfrei
    */
   freeShippingFrom?: number | null;
   taxRate?: number | null;
+  /**
+   * Erscheint auf der Stripe-Bezahlseite. Beide Felder leer lassen, wenn keine Lieferzeit zugesagt werden soll — dann steht dort nichts.
+   */
+  deliveryDaysMin?: number | null;
+  deliveryDaysMax?: number | null;
   /**
    * ISO-Code, z. B. DE, AT, CH.
    */
@@ -1370,6 +1378,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   shippingCost?: T;
   freeShippingFrom?: T;
   taxRate?: T;
+  deliveryDaysMin?: T;
+  deliveryDaysMax?: T;
   shippingCountries?:
     | T
     | {

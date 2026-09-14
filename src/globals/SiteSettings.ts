@@ -118,9 +118,16 @@ export const SiteSettings: GlobalConfig = {
             {
               type: 'row',
               fields: [
-                { name: 'shippingCost', type: 'number', label: 'Versandkosten (€)', defaultValue: 6.9, admin: { width: '33%', step: 0.01 } },
+                { name: 'shippingCost', type: 'number', label: 'Versandkosten (€)', defaultValue: 6.9, admin: { width: '33%', step: 0.01, description: 'Dieser Betrag wird beim Kauf tatsächlich abgebucht. Lithium-Batterien sind Gefahrgut — bitte gegen die echten Konditionen des Versanddienstleisters prüfen.' } },
                 { name: 'freeShippingFrom', type: 'number', label: 'Versandfrei ab (€)', defaultValue: 250, admin: { width: '33%', step: 0.01, description: '0 = nie versandfrei' } },
                 { name: 'taxRate', type: 'number', label: 'MwSt.-Satz (%)', defaultValue: 19, admin: { width: '34%' } },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                { name: 'deliveryDaysMin', type: 'number', label: 'Lieferzeit von (Werktage)', admin: { width: '50%', description: 'Erscheint auf der Stripe-Bezahlseite. Beide Felder leer lassen, wenn keine Lieferzeit zugesagt werden soll — dann steht dort nichts.' } },
+                { name: 'deliveryDaysMax', type: 'number', label: 'Lieferzeit bis (Werktage)', admin: { width: '50%' } },
               ],
             },
             {

@@ -83,6 +83,16 @@ export async function POST(request: Request) {
     freeShippingFrom: settings.freeShippingFrom,
   })
 
+  const tageMin = Number(settings.deliveryDaysMin ?? 0)
+  const tageMax = Number(settings.deliveryDaysMax ?? 0)
+  const lieferzeit =
+    tageMin > 0 && tageMax >= tageMin
+      ? {
+          minimum: { unit: 'business_day' as const, value: tageMin },
+          maximum: { unit: 'business_day' as const, value: tageMax },
+        }
+      : null
+
   const allowedCountries = (settings.shippingCountries ?? [])
     .map((country) => country.code?.toUpperCase())
     .filter((code): code is Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry =>
@@ -108,10 +118,10 @@ export async function POST(request: Request) {
             type: 'fixed_amount',
             display_name: shipping === 0 ? 'Versandkostenfrei' : 'Versand',
             fixed_amount: { amount: toCents(shipping), currency: 'eur' },
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 2 },
-              maximum: { unit: 'business_day', value: 4 },
-            },
+            /* Die Lieferzeit steht auf der Stripe-Bezahlseite und ist damit eine
+               Zusage an den Kunden. Sie wird nur mitgeschickt, wenn sie im
+               Backend gepflegt ist — sonst sagt die Seite dazu nichts. */
+            ...(lieferzeit ? { delivery_estimate: lieferzeit } : {}),
           },
         },
       ],
