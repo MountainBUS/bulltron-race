@@ -75,7 +75,7 @@ export const seedProducts: SeedProduct[] = [
     price: 199,
     sku: 'LI4B500-12-R1',
     ean: '4262358250810',
-    image: 'batterie-4ah.png',
+    image: 'race-4ah.webp',
     badge: 'Leichtgewicht',
     shortDescription:
       'Die kleinste Batterie der Baureihe: 500 A Kaltstartstrom bei 500 Gramm, im Kunststoff-Gehäuse.',
@@ -105,7 +105,7 @@ export const seedProducts: SeedProduct[] = [
     price: 249,
     sku: 'LI6B650-12-R1',
     ean: '4262358250834',
-    image: 'batterie-6ah.png',
+    image: 'race-6ah.webp',
     shortDescription:
       'Mehr Kapazität als die 4 Ah bei 700 Gramm Gewicht. 650 A Kaltstartstrom im Kunststoff-Gehäuse.',
     keyData: { voltage: '12,8 V', capacity: '6 Ah', current: '650 A', weight: '0,7 kg' },
@@ -134,7 +134,7 @@ export const seedProducts: SeedProduct[] = [
     price: 399,
     sku: 'LI12B1000-12-R',
     ean: '4262358250858',
-    image: 'batterie-12ah.png',
+    image: 'race-12ah.webp',
     featured: true,
     shortDescription:
       '1000 A Kaltstartstrom bei 1,3 Kilogramm — die stärkste Batterie im Kunststoff-Gehäuse.',
@@ -195,7 +195,7 @@ export const seedProducts: SeedProduct[] = [
     price: 399,
     sku: 'LI27B700-12-RL1',
     ean: '4262358250759',
-    image: 'batterie-27ah-lifepo.png',
+    image: 'race-27ah-l1.webp',
     shortDescription:
       '27 Ah mit 700 A Kaltstartstrom im genormten L1-Gehäuse — passt in das Batteriefach vieler Fahrzeuge ohne Umbau.',
     keyData: { voltage: '12,8 V', capacity: '27 Ah', current: '700 A', weight: '3,5 kg' },
@@ -224,7 +224,7 @@ export const seedProducts: SeedProduct[] = [
     price: 399,
     sku: 'LI27B700-12-RL2',
     ean: '4262358250766',
-    image: 'batterie-27ah-lifepo.png',
+    image: 'race-27ah-l2.webp',
     shortDescription:
       '27 Ah mit 700 A Kaltstartstrom im genormten L2-Gehäuse, 244 mm lang.',
     keyData: { voltage: '12,8 V', capacity: '27 Ah', current: '700 A', weight: '3,5 kg' },
@@ -253,7 +253,7 @@ export const seedProducts: SeedProduct[] = [
     price: 399,
     sku: 'LI27B700-12-RL3',
     ean: '4262358250773',
-    image: 'batterie-27ah-lifepo.png',
+    image: 'race-27ah-l3.webp',
     shortDescription:
       '27 Ah mit 700 A Kaltstartstrom im genormten L3-Gehäuse, 279 mm lang.',
     keyData: { voltage: '12,8 V', capacity: '27 Ah', current: '700 A', weight: '3,5 kg' },
@@ -282,7 +282,7 @@ export const seedProducts: SeedProduct[] = [
     price: 599,
     sku: 'LI55B1400-12-RL1',
     ean: '4262358250742',
-    image: 'batterie-55ah.png',
+    image: 'race-55ah-l1.webp',
     featured: true,
     shortDescription:
       'Die stärkste Batterie der Baureihe: 1400 A Kaltstartstrom und 55 Ah Kapazität im L1-Gehäuse.',
@@ -312,7 +312,7 @@ export const seedProducts: SeedProduct[] = [
     price: 599,
     sku: 'LI55B1400-12-RL2',
     ean: '4262358250735',
-    image: 'batterie-55ah-lifepo.png',
+    image: 'race-55ah-l2.webp',
     shortDescription:
       '55 Ah mit 1400 A Kaltstartstrom im längeren L2-Gehäuse, 244 mm.',
     keyData: { voltage: '12,8 V', capacity: '55 Ah', current: '1400 A', weight: '6,5 kg' },

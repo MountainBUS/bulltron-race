@@ -71,8 +71,8 @@ export default async function OrderConfirmationPage({
           ) : null}
 
           <div className="notice notice--info" style={{ marginTop: '2rem' }}>
-            Wir versenden aus Deutschland, in der Regel innerhalb von 2–4 Werktagen. Die Sendungsnummer bekommst du per
-            E-Mail, sobald das Paket unterwegs ist.
+            Wir versenden aus Deutschland. Die Sendungsnummer bekommst du per E-Mail, sobald das Paket unterwegs
+            ist.
           </div>
 
           <div className="btn-row" style={{ marginTop: '2rem', justifyContent: 'center' }}>

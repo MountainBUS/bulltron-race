@@ -466,7 +466,7 @@ export const seed = async () => {
       secondaryCtaUrl: 'tel:+4936134948420',
       backgroundImage: heroBild.id,
       backgroundFocus: 'center-right',
-      image: productImages['batterie-55ah.png'],
+      image: productImages['race-55ah-l1.webp'],
       stats: [
         { value: '10.000+', label: 'zufriedene Kunden' },
         { value: '5 Jahre', label: 'Herstellergarantie' },

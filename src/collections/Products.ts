@@ -110,7 +110,7 @@ export const Products: CollectionConfig = {
                   ],
                   admin: { width: '50%' },
                 },
-                { name: 'deliveryTime', type: 'text', label: 'Lieferzeit', defaultValue: '2–4 Werktage', admin: { width: '50%' } },
+                { name: 'deliveryTime', type: 'text', label: 'Lieferzeit', admin: { width: '50%', description: 'Erscheint auf der Produktseite und ist damit eine Zusage an den Kunden. Leer lassen, solange keine belastbare Lieferzeit feststeht — dann steht dort nichts.' } },
               ],
             },
             {

@@ -136,17 +136,12 @@ function videoThumbSvg({ title, sub, tint = RED }) {
 </svg>`
 }
 
-/* Alle Ausfuehrungen sind 12,8 V LiFePO4 — die Preisliste 08/2026 kennt keine
-   zweite Spannungsreihe. Die Kaltstartstroeme stammen aus derselben Liste.
-   Die 118 Ah steht nicht mehr im Sortiment und ist hier entfallen. */
+/* Seit dem 14.09.2026 liegen echte Produktfotos vor (race-*.webp im selben
+   Ordner, freigestellt auf transparentem Grund). Erzeugt wird hier nur noch
+   das Platzhalterbild fuer die 27 Ah im Metall-Gehaeuse — davon gibt es noch
+   kein Foto. Sobald eines da ist, kann dieser Eintrag ebenfalls entfallen. */
 const batteries = [
-  { file: 'batterie-4ah.png', capacity: '4 Ah', voltage: '12,8 V', current: '500 A KALTSTART' },
-  { file: 'batterie-6ah.png', capacity: '6 Ah', voltage: '12,8 V', current: '650 A KALTSTART' },
-  { file: 'batterie-12ah.png', capacity: '12 Ah', voltage: '12,8 V', current: '1000 A KALTSTART' },
   { file: 'batterie-27ah.png', capacity: '27 Ah', voltage: '12,8 V', current: '700 A KALTSTART' },
-  { file: 'batterie-55ah.png', capacity: '55 Ah', voltage: '12,8 V', current: '1400 A KALTSTART', wide: true },
-  { file: 'batterie-27ah-lifepo.png', capacity: '27 Ah', voltage: '12,8 V', current: '700 A KALTSTART' },
-  { file: 'batterie-55ah-lifepo.png', capacity: '55 Ah', voltage: '12,8 V', current: '1400 A KALTSTART', wide: true },
 ]
 
 const covers = [
@@ -174,7 +169,7 @@ for (const thumb of videoThumbs) {
 
 // Teaser: Batterie vor Werks-Hintergrund komponiert
 const teaserBg = await sharp(Buffer.from(coverSvg({ title: '', sub: '' }))).resize(1600, 1200, { fit: 'cover' }).png().toBuffer()
-const teaserBattery = await sharp(path.join(dir, 'batterie-55ah.png')).resize(1180, 885, { fit: 'inside' }).png().toBuffer()
+const teaserBattery = await sharp(path.join(dir, 'race-55ah-l1.webp')).resize(1180, 885, { fit: 'inside' }).png().toBuffer()
 await sharp(teaserBg)
   .composite([{ input: teaserBattery, gravity: 'center' }])
   .png()
