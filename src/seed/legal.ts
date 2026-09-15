@@ -1,6 +1,13 @@
 import { doc, h, p, ul } from './lexical'
 
 /**
+ * Betreiber des Shops und Vertragspartner beim Kauf ist die ProVerDa GmbH,
+ * An der Lache 40-42, 99086 Erfurt (Angaben aus dem Impressum unter
+ * proverda-erfurt.de, abgerufen am 15.09.2026). Verantwortlich für die
+ * Batterien ist die BULLTRON GmbH. Vor dem 15.09.2026 stand in Impressum,
+ * Datenschutzerklärung, AGB und Widerrufsbelehrung durchgehend die BULLTRON
+ * GmbH als Betreiberin — das war falsch und ist hiermit korrigiert.
+ *
  * HINWEIS: Rechtstexte als vollständig ausformulierte Entwürfe.
  * Vor dem Livegang müssen sie von einer Rechtsanwältin bzw. einem Rechtsanwalt
  * oder einem Anbieter wie eRecht24 / IT-Recht Kanzlei geprüft und auf die
@@ -9,22 +16,27 @@ import { doc, h, p, ul } from './lexical'
 
 export const impressum = doc([
   h('h2', 'Angaben gemäß § 5 DDG'),
-  p('BULLTRON GmbH\nAuf der Hude 88\n21339 Lüneburg\nDeutschland'),
+  p('ProVerDa GmbH\nAn der Lache 40-42\n99086 Erfurt\nDeutschland'),
 
   h('h2', 'Vertreten durch'),
-  p('Die Geschäftsführung der BULLTRON GmbH.'),
+  p('Roberto Daniel, Geschäftsführer'),
 
   h('h2', 'Kontakt'),
   p('Telefon: +49 361 34948420\nMobil: +49 157 53705942\nE-Mail: info@bulltron-race.de'),
 
   h('h2', 'Registereintrag'),
-  p('Eintragung im Handelsregister.\nRegistergericht: [Registergericht eintragen]\nRegisternummer: [HRB-Nummer eintragen]'),
+  p('Eintragung im Handelsregister.\nRegistergericht: Amtsgericht Jena\nRegisternummer: HRB 510004'),
 
   h('h2', 'Umsatzsteuer-ID'),
-  p('Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:\n[USt-IdNr. eintragen]'),
+  p('Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:\nDE815509556'),
 
   h('h2', 'Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV'),
-  p('BULLTRON GmbH, Auf der Hude 88, 21339 Lüneburg'),
+  p('Roberto Daniel, An der Lache 40-42, 99086 Erfurt'),
+
+  h('h2', 'Betreiber und Verantwortung für die Batterien'),
+  p(
+    'Betreiber dieses Online-Shops und Vertragspartner beim Kauf ist die ProVerDa GmbH. Verantwortlich für die angebotenen Batterien der Marke BULLTRON RACE ist die BULLTRON GmbH, Auf der Hude 88, 21339 Lüneburg.',
+  ),
 
   h('h2', 'EU-Streitschlichtung'),
   p(
@@ -45,7 +57,7 @@ export const impressum = doc([
 export const datenschutz = doc([
   h('h2', '1. Verantwortlicher'),
   p(
-    'Verantwortlich für die Datenverarbeitung auf dieser Website ist:\nBULLTRON GmbH, Auf der Hude 88, 21339 Lüneburg, E-Mail: info@bulltron-race.de, Telefon: +49 361 34948420.',
+    'Verantwortlich für die Datenverarbeitung auf dieser Website ist:\nProVerDa GmbH, An der Lache 40-42, 99086 Erfurt, E-Mail: info@bulltron-race.de, Telefon: +49 361 34948420.',
   ),
 
   h('h2', '2. Grundsätzliches'),
@@ -134,7 +146,7 @@ export const agb = doc([
   ),
 
   h('h2', '§ 2 Vertragspartner und Vertragsschluss'),
-  p('(1) Der Kaufvertrag kommt zustande mit der BULLTRON GmbH, Auf der Hude 88, 21339 Lüneburg.'),
+  p('(1) Der Kaufvertrag kommt zustande mit der ProVerDa GmbH, An der Lache 40-42, 99086 Erfurt.'),
   p(
     '(2) Die Darstellung der Produkte im Online-Shop stellt kein rechtlich bindendes Angebot dar, sondern eine Aufforderung zur Bestellung. Durch Anklicken des Buttons „Zahlungspflichtig bestellen“ geben Sie eine verbindliche Bestellung der im Warenkorb enthaltenen Waren ab.',
   ),
@@ -177,7 +189,7 @@ export const agb = doc([
     'Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag, an dem Sie oder ein von Ihnen benannter Dritter, der nicht der Beförderer ist, die letzte Ware in Besitz genommen haben bzw. hat.',
   ),
   p(
-    'Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (BULLTRON GmbH, Auf der Hude 88, 21339 Lüneburg, E-Mail: info@bulltron-race.de, Telefon: +49 361 34948420) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.',
+    'Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (ProVerDa GmbH, An der Lache 40-42, 99086 Erfurt, E-Mail: info@bulltron-race.de, Telefon: +49 361 34948420) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.',
   ),
 
   h('h3', 'Folgen des Widerrufs'),
@@ -196,7 +208,7 @@ export const agb = doc([
     '(1) Es gilt das gesetzliche Mängelhaftungsrecht. Gegenüber Verbrauchern beträgt die Verjährungsfrist für Mängelansprüche zwei Jahre ab Ablieferung der Ware.',
   ),
   p(
-    '(2) Unabhängig davon gewähren wir auf die hier angebotenen Batterien eine Herstellergarantie von fünf Jahren nach Maßgabe der jeweiligen Garantiebedingungen. Die gesetzlichen Rechte werden dadurch nicht eingeschränkt.',
+    '(2) Unabhängig davon gewährt die BULLTRON GmbH als Herstellerin auf die hier angebotenen Batterien eine Herstellergarantie von fünf Jahren nach Maßgabe der jeweiligen Garantiebedingungen. Die gesetzlichen Rechte werden dadurch nicht eingeschränkt.',
   ),
   p(
     '(3) Von der Garantie ausgenommen sind Schäden durch unsachgemäßen Einbau, mechanische Beschädigung, Tiefentladung infolge längerer Lagerung ohne Ladung sowie durch Verwendung ungeeigneter Ladegeräte.',

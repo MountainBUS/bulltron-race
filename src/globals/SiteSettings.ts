@@ -61,13 +61,13 @@ export const SiteSettings: GlobalConfig = {
         {
           label: 'Kontakt',
           fields: [
-            { name: 'companyName', type: 'text', label: 'Firma', defaultValue: 'BULLTRON GmbH' },
-            { name: 'street', type: 'text', label: 'Straße', defaultValue: 'Auf der Hude 88' },
+            { name: 'companyName', type: 'text', label: 'Firma', defaultValue: 'ProVerDa GmbH' },
+            { name: 'street', type: 'text', label: 'Straße', defaultValue: 'An der Lache 40-42' },
             {
               type: 'row',
               fields: [
-                { name: 'postalCode', type: 'text', label: 'PLZ', defaultValue: '21339', admin: { width: '30%' } },
-                { name: 'city', type: 'text', label: 'Ort', defaultValue: 'Lüneburg', admin: { width: '70%' } },
+                { name: 'postalCode', type: 'text', label: 'PLZ', defaultValue: '99086', admin: { width: '30%' } },
+                { name: 'city', type: 'text', label: 'Ort', defaultValue: 'Erfurt', admin: { width: '70%' } },
               ],
             },
             {
