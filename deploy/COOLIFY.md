@@ -127,9 +127,31 @@ Unter **Configuration → Environment Variables**:
 | `STRIPE_SECRET_KEY`         | Testschlüssel `sk_test_…`                              | nein            |
 | `STRIPE_WEBHOOK_SECRET`     | `whsec_…` aus dem Stripe-Webhook                       | nein            |
 | `SEED_ON_START`             | beim **ersten** Deploy `true`, danach löschen          | nein            |
+| `SMTP_HOST`                 | Mailserver, z. B. `smtp.example.de`                    | nein            |
+| `SMTP_PORT`                 | `587` (STARTTLS) oder `465` (TLS), Vorgabe `587`       | nein            |
+| `SMTP_USER`                 | Postfachkennung                                        | nein            |
+| `SMTP_PASSWORD`             | Postfachkennwort                                       | nein            |
+| `MAIL_FROM`                 | Absenderadresse, muss zum Postfach passen              | nein            |
+| `MAIL_FROM_NAME`            | Absendername, Vorgabe `BULLTRON RACE`                  | nein            |
+| `MAIL_SHOP`                 | Empfänger der internen Benachrichtigung; leer = die E-Mail-Adresse aus den Website-Einstellungen | nein |
 
 `DATABASE_URI` und `MEDIA_DIR` sind im Dockerfile bereits so vorbelegt. Sie hier
 trotzdem einzutragen macht sichtbar, wo die Daten liegen.
+
+### Ohne SMTP geht keine Bestellbestätigung raus
+
+Fehlt `SMTP_HOST` oder `MAIL_FROM`, bleibt der Mailadapter aus und Payload
+schreibt Mails nur ins Protokoll. Für die Entwicklung ist das richtig, für den
+Livebetrieb nicht: § 2 Abs. 3 der AGB sagt dem Kunden die Bestätigung des
+Bestelleingangs zu, und § 312i Abs. 1 Nr. 3 BGB verlangt sie. Die Quittung, die
+Stripe verschicken kann, ist eine Quittung des Zahlungsdienstleisters und
+ersetzt sie nicht. Im Testmodus verschickt Stripe ohnehin keine Quittungen —
+laut Stripe-Dokumentation lässt sich dort nur von Hand eine auslösen.
+
+Prüfen lässt sich der Versand am Protokoll des Containers: Ohne Zugang steht
+dort nach einer Bestellung „kein SMTP-Zugang hinterlegt", bei einem abgelehnten
+Login die Meldung des Mailservers. Der Webhook läuft in beiden Fällen sauber
+durch — ein Mailproblem darf keine Bestellung verhindern.
 
 ### Die beiden Build-Variablen — bitte nicht übergehen
 

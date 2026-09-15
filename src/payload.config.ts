@@ -4,6 +4,7 @@ import { buildConfig } from 'payload'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { de } from '@payloadcms/translations/languages/de'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import sharp from 'sharp'
 
 import { Users } from './collections/Users'
@@ -50,6 +51,29 @@ export default buildConfig({
     push: process.env.NODE_ENV !== 'production',
   }),
   sharp,
+  /* E-Mail-Versand für die Bestellbestätigung.
+     Ohne SMTP_HOST bleibt der Adapter aus; Payload schreibt Mails dann nur ins
+     Protokoll. Das ist Absicht — die Entwicklungsumgebung soll nichts an echte
+     Adressen schicken. Auf der Live-Instanz muss der Zugang gesetzt sein, sonst
+     geht die nach § 312i BGB und nach den eigenen AGB zugesagte Bestätigung
+     nicht raus. */
+  ...(process.env.SMTP_HOST
+    ? {
+        email: nodemailerAdapter({
+          defaultFromAddress: process.env.MAIL_FROM || '',
+          defaultFromName: process.env.MAIL_FROM_NAME || 'BULLTRON RACE',
+          transportOptions: {
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            // 465 spricht von Anfang an TLS, 587 handelt es über STARTTLS aus.
+            secure: Number(process.env.SMTP_PORT || 587) === 465,
+            auth: process.env.SMTP_USER
+              ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+              : undefined,
+          },
+        }),
+      }
+    : {}),
   // Das Backend läuft ausschließlich auf Deutsch.
   i18n: { supportedLanguages: { de }, fallbackLanguage: 'de' },
   upload: { limits: { fileSize: 10_000_000 } },

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
-import { getPayloadClient } from '../../../../../lib/payload'
+import { getPayloadClient, getSiteSettings } from '../../../../../lib/payload'
+import { bestellungVersenden } from '../../../../../lib/mail'
 import { getStripe, isStripeConfigured } from '../../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -72,8 +73,9 @@ export async function POST(request: Request) {
   const address = session.collected_information?.shipping_details?.address ?? session.customer_details?.address
   const recipient = session.collected_information?.shipping_details?.name ?? session.customer_details?.name
 
+  let bestellung: Record<string, any>
   try {
-    await payload.create({
+    bestellung = (await payload.create({
       collection: 'orders',
       overrideAccess: true,
       data: {
@@ -101,11 +103,24 @@ export async function POST(request: Request) {
           paymentStatus: session.payment_status ?? undefined,
         },
       },
-    })
+    })) as Record<string, any>
   } catch (error) {
     // Stripe wiederholt die Zustellung, wenn wir einen Fehler melden.
     const message = error instanceof Error ? error.message : 'unbekannt'
     return NextResponse.json({ error: `Bestellung konnte nicht gespeichert werden: ${message}` }, { status: 500 })
+  }
+
+  /* Bestellbestätigung an den Kunden, Benachrichtigung an den Shop.
+     Bewusst nach dem Speichern und bewusst ohne Auswirkung auf die Antwort:
+     Scheitert der Mailversand, ist die Bestellung trotzdem erfasst. Würden wir
+     hier einen Fehler melden, stellte Stripe erneut zu und liefe gegen die
+     Dublettensperre — der Kunde bekäme davon nichts, der Shop nur Rauschen. */
+  try {
+    const settings = await getSiteSettings()
+    await bestellungVersenden(payload, bestellung, settings as Record<string, any>)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unbekannt'
+    payload.logger.error(`Mailversand zur Bestellung ${bestellung.orderNumber} fehlgeschlagen: ${message}`)
   }
 
   return NextResponse.json({ received: true })
