@@ -136,12 +136,33 @@ export const bildAnhang = async (
 }
 
 /**
- * Das Logo sitzt auf dunklem Grund und ist weiß gezeichnet — deshalb PNG mit
- * dunkler Fläche dahinter statt der JPEG-Behandlung der Produktbilder.
+ * Logo für die Mail.
+ *
+ * `logo-mail.png` ist freigestellt — es hat keinen eigenen Hintergrund, sondern
+ * einen durchsichtigen. Das ist hier wichtiger als es klingt: Die erste Fassung
+ * legte das Logo auf eine feste dunkle Fläche, und weil Outlook im Dunkelmodus
+ * die Hintergrundfarben der Mail nachträglich aufhellt, die Farben in einem
+ * Bild aber unangetastet lässt, stand das Logo danach in einem schwarzen
+ * Kasten auf grauem Grund. Mit Transparenz kann das nicht mehr passieren,
+ * egal was der Client mit dem Untergrund macht.
+ *
+ * Deshalb auch kein `flatten` und PNG statt JPEG — JPEG kennt keine
+ * Transparenz. `logo.png` bleibt als Rückfallebene: es ist die Fassung mit
+ * fester Fläche und wird nur genommen, wenn die freigestellte Datei fehlt.
  */
 export const logoAnhang = async (): Promise<Anhang | null> => {
+  const verzeichnis = path.join(process.cwd(), 'public', 'admin')
+
   try {
-    const roh = await fs.readFile(path.join(process.cwd(), 'public', 'admin', 'logo.png'))
+    const roh = await fs.readFile(path.join(verzeichnis, 'logo-mail.png'))
+    const content = await sharp(roh).resize(520, undefined, { fit: 'inside' }).png().toBuffer()
+    return { filename: 'logo.png', content, cid: 'bt-logo', contentType: 'image/png' }
+  } catch {
+    // Rückfallebene
+  }
+
+  try {
+    const roh = await fs.readFile(path.join(verzeichnis, 'logo.png'))
     const content = await sharp(roh)
       .resize(480, undefined, { fit: 'inside' })
       .flatten({ background: FARBE.karte })
