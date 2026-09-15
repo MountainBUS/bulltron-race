@@ -118,8 +118,8 @@ export const SiteSettings: GlobalConfig = {
             {
               type: 'row',
               fields: [
-                { name: 'shippingCost', type: 'number', label: 'Versandkosten (€)', defaultValue: 6.9, admin: { width: '33%', step: 0.01, description: 'Dieser Betrag wird beim Kauf tatsächlich abgebucht. Lithium-Batterien sind Gefahrgut — bitte gegen die echten Konditionen des Versanddienstleisters prüfen.' } },
-                { name: 'freeShippingFrom', type: 'number', label: 'Versandfrei ab (€)', defaultValue: 250, admin: { width: '33%', step: 0.01, description: '0 = nie versandfrei' } },
+                { name: 'shippingCost', type: 'number', label: 'Versandkosten (€)', defaultValue: 17.9, admin: { width: '33%', step: 0.01, description: 'Standardversand als Gefahrgut, von Bulltron mit 17,90 € angegeben. Dieser Betrag wird beim Kauf tatsächlich abgebucht.' } },
+                { name: 'freeShippingFrom', type: 'number', label: 'Versandfrei ab (€)', defaultValue: 0, admin: { width: '33%', step: 0.01, description: '0 = nie versandfrei. Eine Freigrenze ist eine Zusage an den Kunden — nur eintragen, wenn sie wirklich gilt.' } },
                 { name: 'taxRate', type: 'number', label: 'MwSt.-Satz (%)', defaultValue: 19, admin: { width: '34%' } },
               ],
             },

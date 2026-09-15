@@ -432,8 +432,8 @@ export const seed = async () => {
       ],
       copyright: '© BULLTRON GmbH',
       paymentNote: 'Sichere Zahlung über Stripe:',
-      shippingCost: 6.9,
-      freeShippingFrom: 250,
+      shippingCost: 17.9,
+      freeShippingFrom: 0,
       taxRate: 19,
       shippingCountries: [
         { code: 'DE', name: 'Deutschland' },
