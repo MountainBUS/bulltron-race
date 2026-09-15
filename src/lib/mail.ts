@@ -41,7 +41,7 @@ import { formatPrice } from './format'
  */
 
 type Position = {
-  product?: number | string | null
+  product?: number | string | Record<string, any> | null
   title?: string | null
   sku?: string | null
   quantity?: number | null
@@ -71,12 +71,15 @@ export const mailVersandBereit = (): boolean => Boolean(process.env.SMTP_HOST &&
    style-Attribut stehen — CSS-Variablen und <style>-Blöcke überleben den Weg
    durch die Mailclients nicht. */
 const FARBE = {
-  schwarz: '#12171a',
+  grund: '#0d1113',
+  karte: '#151b1f',
+  panel: '#1b2226',
   rot: '#e03e51',
-  text: '#1c2226',
-  gedaempft: '#6b767d',
-  linie: '#e3e6e8',
-  flaeche: '#f4f5f6',
+  text: '#d7dee2',
+  hell: '#ffffff',
+  gedaempft: '#7d888e',
+  linie: '#242c31',
+  kante: '#2a3338',
   weiss: '#ffffff',
 }
 
@@ -141,7 +144,7 @@ export const logoAnhang = async (): Promise<Anhang | null> => {
     const roh = await fs.readFile(path.join(process.cwd(), 'public', 'admin', 'logo.png'))
     const content = await sharp(roh)
       .resize(480, undefined, { fit: 'inside' })
-      .flatten({ background: FARBE.schwarz })
+      .flatten({ background: FARBE.karte })
       .png()
       .toBuffer()
     return { filename: 'logo.png', content, cid: 'bt-logo', contentType: 'image/png' }
@@ -158,22 +161,48 @@ const positionsBilder = async (payload: Payload, positionen: Position[]): Promis
     positionen.map(async (position, index) => {
       if (!position.product) return null
       try {
-        const produkt = (await payload.findByID({
-          collection: 'products',
-          id: position.product as never,
-          depth: 1,
-          overrideAccess: true,
-        })) as Record<string, any>
+        /* Payload liefert Verknüpfungen in der Vorgabetiefe bereits aufgelöst:
+           `product` ist hier ein vollständiger Datensatz, kein Schlüssel — und
+           `mainImage` darin ebenfalls. Genau das ist der Grund, warum in der
+           ersten Fassung keine Produktbilder in der Mail standen: sie reichte
+           das Objekt an findByID weiter, was scheiterte und still zu „kein
+           Bild" führte. Beide Formen werden deshalb behandelt. */
+        const produkt = (typeof position.product === 'object'
+          ? position.product
+          : ((await payload.findByID({
+              collection: 'products',
+              id: position.product as never,
+              depth: 1,
+              overrideAccess: true,
+            })) as Record<string, any>)) as Record<string, any>
 
-        const bild = produkt?.mainImage
-        if (!bild || typeof bild !== 'object') return null
+        const bild =
+          produkt?.mainImage && typeof produkt.mainImage === 'object'
+            ? produkt.mainImage
+            : produkt?.mainImage
+              ? ((await payload.findByID({
+                  collection: 'media',
+                  id: produkt.mainImage as never,
+                  overrideAccess: true,
+                })) as Record<string, any>)
+              : null
+        if (!bild || typeof bild !== 'object') {
+          payload.logger.warn(`Position ${index + 1} (${position.title ?? '?'}): kein Produktbild hinterlegt.`)
+          return null
+        }
 
         // Die kleinste erzeugte Größe reicht für 88 Bildpunkte Anzeige.
         const dateiname = bild.sizes?.thumbnail?.filename ?? bild.filename
         if (!dateiname) return null
 
-        return await bildAnhang(path.join(verzeichnis, String(dateiname)), `pos-${index}`, 176, 176, 'contain')
-      } catch {
+        const anhang = await bildAnhang(path.join(verzeichnis, String(dateiname)), `pos-${index}`, 176, 176, 'contain')
+        if (!anhang) {
+          payload.logger.warn(`Position ${index + 1}: Bilddatei ${dateiname} nicht lesbar unter ${verzeichnis}.`)
+        }
+        return anhang
+      } catch (error) {
+        const meldung = error instanceof Error ? error.message : 'unbekannt'
+        payload.logger.warn(`Position ${index + 1}: Produktbild konnte nicht aufbereitet werden (${meldung}).`)
         return null
       }
     }),
@@ -182,82 +211,115 @@ const positionsBilder = async (payload: Payload, positionen: Position[]): Promis
 
 /* -------------------------------------------------------------------- HTML */
 
+/* Die Mail ist bewusst dunkel gehalten. Zwei Gründe: Sie trifft damit die
+   Marke, und sie ist gegen die Eingriffe der Mailclients unempfindlich.
+   Outlook und Apple Mail rechnen im Dunkelmodus helle Entwürfe selbsttätig um —
+   aus der weißen Fläche wird Grau, aus dem schwarzen Kopf ein helles Grau, und
+   das Ergebnis sieht aus wie ein Fehler. Ein von vornherein dunkler Entwurf
+   bleibt in beiden Betriebsarten so, wie er gemeint ist. Dazu die beiden
+   color-scheme-Angaben im Kopf, mit denen der Client erfährt, dass die
+   Gestaltung beide Fälle abdeckt und er nichts umrechnen muss.
+
+   Farben stehen als feste Werte im style-Attribut, dazu bgcolor an Tabellen
+   und Zellen: Outlook unter Windows rendert mit der Word-Engine und ignoriert
+   Hintergrundfarben aus CSS an manchen Stellen. */
+
 const kopfbereich = (logo: Anhang | null, ueberschrift: string, unterzeile: string): string => `
 <tr>
-  <td style="background-color:${FARBE.schwarz};padding:34px 32px 30px 32px;text-align:center">
+  <td bgcolor="${FARBE.karte}" style="background-color:${FARBE.karte};padding:40px 32px 30px 32px;text-align:center">
     ${
       logo
-        ? `<img src="cid:${logo.cid}" width="220" alt="BULLTRON RACE" style="display:block;margin:0 auto 22px auto;width:220px;max-width:70%;height:auto;border:0" />`
-        : `<div style="font-family:${SCHRIFT};font-size:20px;font-weight:bold;letter-spacing:3px;color:${FARBE.weiss};margin-bottom:22px">BULLTRON RACE</div>`
+        ? `<img src="cid:${logo.cid}" width="230" alt="BULLTRON RACE" style="display:block;margin:0 auto 26px auto;width:230px;max-width:72%;height:auto;border:0" />`
+        : `<div style="font-family:${SCHRIFT};font-size:22px;font-weight:bold;letter-spacing:4px;color:${FARBE.weiss};margin-bottom:26px">BULLTRON RACE</div>`
     }
     <div style="font-family:${SCHRIFT};font-size:11px;font-weight:bold;letter-spacing:2.5px;text-transform:uppercase;color:${FARBE.rot}">${sicher(unterzeile)}</div>
-    <div style="font-family:${SCHRIFT};font-size:26px;line-height:32px;font-weight:bold;color:${FARBE.weiss};margin-top:8px">${sicher(ueberschrift)}</div>
+    <div style="font-family:${SCHRIFT};font-size:27px;line-height:34px;font-weight:bold;color:${FARBE.hell};margin-top:10px">${sicher(ueberschrift)}</div>
   </td>
+</tr>
+<tr>
+  <td bgcolor="${FARBE.rot}" style="background-color:${FARBE.rot};font-size:0;line-height:0;height:3px">&nbsp;</td>
 </tr>`
 
 const absatz = (inhalt: string, oben = 0): string =>
-  `<p style="font-family:${SCHRIFT};font-size:15px;line-height:24px;color:${FARBE.text};margin:${oben}px 0 0 0">${inhalt}</p>`
+  `<p style="font-family:${SCHRIFT};font-size:15px;line-height:25px;color:${FARBE.text};margin:${oben}px 0 0 0">${inhalt}</p>`
 
 const abschnittsTitel = (text: string): string =>
-  `<div style="font-family:${SCHRIFT};font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${FARBE.gedaempft};margin:0 0 14px 0">${sicher(text)}</div>`
+  `<div style="font-family:${SCHRIFT};font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${FARBE.gedaempft};margin:0 0 16px 0">${sicher(text)}</div>`
 
 const positionsZeile = (position: Position, bild: Anhang | null, letzte: boolean): string => {
   const menge = position.quantity ?? 1
   const rand = letzte ? '' : `border-bottom:1px solid ${FARBE.linie};`
   return `
 <tr>
-  <td width="88" style="${rand}padding:16px 16px 16px 0;vertical-align:top">
+  <td width="88" style="${rand}padding:18px 18px 18px 0;vertical-align:top">
     ${
       bild
-        ? `<img src="cid:${bild.cid}" width="88" height="88" alt="" style="display:block;width:88px;height:88px;border:1px solid ${FARBE.linie};background-color:${FARBE.weiss}" />`
-        : `<div style="width:88px;height:88px;border:1px solid ${FARBE.linie};background-color:${FARBE.flaeche}"></div>`
+        ? `<img src="cid:${bild.cid}" width="88" height="88" alt="" style="display:block;width:88px;height:88px;border:0;background-color:${FARBE.weiss}" />`
+        : `<div style="width:88px;height:88px;background-color:${FARBE.panel}"></div>`
     }
   </td>
-  <td style="${rand}padding:16px 12px 16px 0;vertical-align:top">
-    <div style="font-family:${SCHRIFT};font-size:15px;font-weight:bold;line-height:21px;color:${FARBE.text}">${sicher(position.title)}</div>
-    ${position.sku ? `<div style="font-family:${SCHRIFT};font-size:12px;line-height:18px;color:${FARBE.gedaempft};margin-top:3px">Artikelnummer ${sicher(position.sku)}</div>` : ''}
-    <div style="font-family:${SCHRIFT};font-size:13px;line-height:19px;color:${FARBE.gedaempft};margin-top:6px">Menge ${menge} &nbsp;·&nbsp; je ${formatPrice(position.unitPrice ?? 0)}</div>
+  <td style="${rand}padding:18px 12px 18px 0;vertical-align:top">
+    <div style="font-family:${SCHRIFT};font-size:16px;font-weight:bold;line-height:22px;color:${FARBE.hell}">${sicher(position.title)}</div>
+    ${position.sku ? `<div style="font-family:${SCHRIFT};font-size:12px;line-height:18px;color:${FARBE.gedaempft};margin-top:4px">Artikelnummer ${sicher(position.sku)}</div>` : ''}
+    <div style="font-family:${SCHRIFT};font-size:13px;line-height:19px;color:${FARBE.gedaempft};margin-top:8px">Menge ${menge} &nbsp;·&nbsp; je ${formatPrice(position.unitPrice ?? 0)}</div>
   </td>
-  <td style="${rand}padding:16px 0;vertical-align:top;text-align:right;white-space:nowrap">
-    <div style="font-family:${SCHRIFT};font-size:15px;font-weight:bold;line-height:21px;color:${FARBE.text}">${formatPrice(position.lineTotal ?? 0)}</div>
+  <td style="${rand}padding:18px 0;vertical-align:top;text-align:right;white-space:nowrap">
+    <div style="font-family:${SCHRIFT};font-size:16px;font-weight:bold;line-height:22px;color:${FARBE.hell}">${formatPrice(position.lineTotal ?? 0)}</div>
   </td>
 </tr>`
 }
 
 const summenZeile = (bezeichnung: string, betrag: string, stark = false): string => `
 <tr>
-  <td style="font-family:${SCHRIFT};font-size:${stark ? '16' : '14'}px;line-height:${stark ? '24' : '22'}px;${stark ? 'font-weight:bold;' : ''}color:${stark ? FARBE.text : FARBE.gedaempft};padding:${stark ? '12' : '4'}px 0 ${stark ? '0' : '4'}px 0;${stark ? `border-top:2px solid ${FARBE.schwarz};` : ''}">${sicher(bezeichnung)}</td>
-  <td style="font-family:${SCHRIFT};font-size:${stark ? '20' : '14'}px;line-height:${stark ? '24' : '22'}px;font-weight:bold;color:${stark ? FARBE.rot : FARBE.text};padding:${stark ? '12' : '4'}px 0 ${stark ? '0' : '4'}px 0;text-align:right;white-space:nowrap;${stark ? `border-top:2px solid ${FARBE.schwarz};` : ''}">${sicher(betrag)}</td>
+  <td style="font-family:${SCHRIFT};font-size:${stark ? '16' : '14'}px;line-height:${stark ? '26' : '22'}px;${stark ? 'font-weight:bold;' : ''}color:${stark ? FARBE.hell : FARBE.gedaempft};padding:${stark ? '14' : '5'}px 0 ${stark ? '0' : '5'}px 0;${stark ? `border-top:2px solid ${FARBE.kante};` : ''}">${sicher(bezeichnung)}</td>
+  <td style="font-family:${SCHRIFT};font-size:${stark ? '21' : '14'}px;line-height:${stark ? '26' : '22'}px;font-weight:bold;color:${stark ? FARBE.rot : FARBE.text};padding:${stark ? '14' : '5'}px 0 ${stark ? '0' : '5'}px 0;text-align:right;white-space:nowrap;${stark ? `border-top:2px solid ${FARBE.kante};` : ''}">${sicher(betrag)}</td>
+</tr>`
+
+const panel = (titel: string, zeilen: string): string => `
+<tr>
+  <td style="padding:34px 32px 38px 32px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARBE.panel}" style="background-color:${FARBE.panel}">
+      <tr>
+        <td style="padding:24px 26px">
+          ${abschnittsTitel(titel)}
+          <div style="font-family:${SCHRIFT};font-size:15px;line-height:24px;color:${FARBE.text}">${zeilen}</div>
+        </td>
+      </tr>
+    </table>
+  </td>
 </tr>`
 
 const fussbereich = (e: Einstellungen, rechtslinks: Array<{ text: string; url: string }>): string => `
 <tr>
-  <td style="background-color:${FARBE.schwarz};padding:28px 32px">
+  <td bgcolor="${FARBE.grund}" style="background-color:${FARBE.grund};padding:30px 32px;border-top:1px solid ${FARBE.linie}">
     ${
       rechtslinks.length > 0
         ? `<div style="font-family:${SCHRIFT};font-size:13px;line-height:22px;margin:0 0 18px 0">${rechtslinks
-            .map((l) => `<a href="${sicher(l.url)}" style="color:${FARBE.weiss};text-decoration:underline">${sicher(l.text)}</a>`)
+            .map((l) => `<a href="${sicher(l.url)}" style="color:${FARBE.hell};text-decoration:underline">${sicher(l.text)}</a>`)
             .join(`<span style="color:${FARBE.gedaempft}"> &nbsp;·&nbsp; </span>`)}</div>`
         : ''
     }
-    <div style="font-family:${SCHRIFT};font-size:12px;line-height:20px;color:#9aa4aa">
+    <div style="font-family:${SCHRIFT};font-size:12px;line-height:20px;color:${FARBE.gedaempft}">
       ${absenderZeilen(e).map(sicher).join('<br />')}
     </div>
   </td>
 </tr>`
 
-const rahmen = (inhalt: string): string => `<!DOCTYPE html>
+const rahmen = (titel: string, inhalt: string): string => `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BULLTRON RACE</title>
+<meta name="color-scheme" content="light dark" />
+<meta name="supported-color-schemes" content="light dark" />
+<title>${sicher(titel)}</title>
+<style>:root { color-scheme: light dark; supported-color-schemes: light dark; }</style>
 </head>
-<body style="margin:0;padding:0;background-color:${FARBE.flaeche}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FARBE.flaeche}">
+<body bgcolor="${FARBE.grund}" style="margin:0;padding:0;background-color:${FARBE.grund}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARBE.grund}" style="background-color:${FARBE.grund}">
   <tr>
-    <td align="center" style="padding:28px 12px">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:${FARBE.weiss}">
+    <td align="center" style="padding:30px 12px">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARBE.karte}" style="width:600px;max-width:100%;background-color:${FARBE.karte}">
         ${inhalt}
       </table>
     </td>
@@ -280,18 +342,20 @@ export const kundenHtml = (
     e.imprintUrl ? { text: 'Impressum', url: `${basis}${e.imprintUrl}` } : null,
   ].filter((l): l is { text: string; url: string } => Boolean(l))
 
-  return rahmen(`
+  return rahmen(
+    `Ihre Bestellung ${b.orderNumber ?? ''}`,
+    `
   ${kopfbereich(logo, 'Ihre Bestellung ist eingegangen', b.orderNumber ? `Bestellung ${b.orderNumber}` : 'Bestellbestätigung')}
 
   <tr>
-    <td style="padding:34px 32px 0 32px">
+    <td style="padding:36px 32px 0 32px">
       ${absatz(`${b.customerName ? `Guten Tag ${sicher(b.customerName)},` : 'Guten Tag,'}`)}
       ${absatz('vielen Dank für Ihre Bestellung. Hiermit bestätigen wir deren Eingang. Der Kaufvertrag kommt zustande, sobald wir die Annahme der Bestellung erklären oder die Ware versenden.', 14)}
     </td>
   </tr>
 
   <tr>
-    <td style="padding:30px 32px 0 32px">
+    <td style="padding:32px 32px 0 32px">
       ${abschnittsTitel('Ihre Artikel')}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${positionen.map((p, i) => positionsZeile(p, bilder[i] ?? null, i === positionen.length - 1)).join('')}
@@ -300,41 +364,39 @@ export const kundenHtml = (
   </tr>
 
   <tr>
-    <td style="padding:22px 32px 0 32px">
+    <td style="padding:24px 32px 0 32px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${summenZeile('Zwischensumme', formatPrice(b.subtotal ?? 0))}
         ${summenZeile('Versand', formatPrice(b.shipping ?? 0))}
         ${summenZeile('Gesamtbetrag', formatPrice(b.total ?? 0), true)}
       </table>
-      ${e.priceNote ? `<div style="font-family:${SCHRIFT};font-size:12px;line-height:18px;color:${FARBE.gedaempft};margin-top:10px;text-align:right">${sicher(e.priceNote)}</div>` : ''}
+      ${e.priceNote ? `<div style="font-family:${SCHRIFT};font-size:12px;line-height:18px;color:${FARBE.gedaempft};margin-top:12px;text-align:right">${sicher(e.priceNote)}</div>` : ''}
     </td>
   </tr>
 
-  <tr>
-    <td style="padding:32px 32px 36px 32px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FARBE.flaeche}">
-        <tr>
-          <td style="padding:22px 24px">
-            ${abschnittsTitel('Lieferadresse')}
-            <div style="font-family:${SCHRIFT};font-size:15px;line-height:23px;color:${FARBE.text}">
-              ${anschriftZeilen(b).map(sicher).join('<br />')}
-            </div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
+  ${panel('Lieferadresse', anschriftZeilen(b).map(sicher).join('<br />'))}
 
-  ${fussbereich(e, rechtslinks)}`)
+  ${fussbereich(e, rechtslinks)}`,
+  )
 }
 
 export const shopHtml = (b: Bestellung, e: Einstellungen, logo: Anhang | null, bilder: Array<Anhang | null>): string => {
   const positionen = b.items ?? []
-  return rahmen(`
-  ${kopfbereich(logo, `${formatPrice(b.total ?? 0)}`, 'Neue Bestellung')}
+  const kunde = [
+    ...anschriftZeilen(b).map(sicher),
+    b.email ? sicher(b.email) : null,
+    b.phone ? sicher(b.phone) : null,
+  ]
+    .filter(Boolean)
+    .join('<br />')
+
+  return rahmen(
+    `Neue Bestellung ${b.orderNumber ?? ''}`,
+    `
+  ${kopfbereich(logo, formatPrice(b.total ?? 0), 'Neue Bestellung')}
 
   <tr>
-    <td style="padding:30px 32px 0 32px">
+    <td style="padding:32px 32px 0 32px">
       ${abschnittsTitel(b.orderNumber ? `Bestellung ${b.orderNumber}` : 'Bestellung')}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${positionen.map((p, i) => positionsZeile(p, bilder[i] ?? null, i === positionen.length - 1)).join('')}
@@ -343,7 +405,7 @@ export const shopHtml = (b: Bestellung, e: Einstellungen, logo: Anhang | null, b
   </tr>
 
   <tr>
-    <td style="padding:22px 32px 0 32px">
+    <td style="padding:24px 32px 0 32px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${summenZeile('Zwischensumme', formatPrice(b.subtotal ?? 0))}
         ${summenZeile('Versand', formatPrice(b.shipping ?? 0))}
@@ -352,24 +414,10 @@ export const shopHtml = (b: Bestellung, e: Einstellungen, logo: Anhang | null, b
     </td>
   </tr>
 
-  <tr>
-    <td style="padding:32px 32px 36px 32px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FARBE.flaeche}">
-        <tr>
-          <td style="padding:22px 24px">
-            ${abschnittsTitel('Kunde')}
-            <div style="font-family:${SCHRIFT};font-size:15px;line-height:23px;color:${FARBE.text}">
-              ${anschriftZeilen(b).map(sicher).join('<br />')}
-              ${b.email ? `<br />${sicher(b.email)}` : ''}
-              ${b.phone ? `<br />${sicher(b.phone)}` : ''}
-            </div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
+  ${panel('Kunde', kunde)}
 
-  ${fussbereich(e, [])}`)
+  ${fussbereich(e, [])}`,
+  )
 }
 
 /* -------------------------------------------------------------------- Text */
