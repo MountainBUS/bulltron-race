@@ -26,6 +26,15 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
       titleSuffix: ' · Bulltron Race',
+      icons: [{ rel: 'icon', type: 'image/png', url: '/admin/favicon.png' }],
+    },
+    /* Anmeldeseite und Kopfzeile tragen das Bulltron-Race-Logo statt des
+       Payload-Zeichens. Die Pfade sind relativ zu importMap.baseDir (src). */
+    components: {
+      graphics: {
+        Logo: '/components/admin/Logo#Logo',
+        Icon: '/components/admin/Icon#Icon',
+      },
     },
   },
   collections: [Products, Categories, Dealers, Teams, Orders, Pages, Media, Users],
