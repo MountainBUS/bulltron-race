@@ -5,6 +5,8 @@ import { getStripe, isStripeConfigured } from '../../../lib/stripe'
 import { formatPrice } from '../../../lib/format'
 import { ClearCart } from '../../../components/ClearCart'
 import { IconArrow, IconCheck } from '../../../components/Icons'
+import { VerkaeuferHinweis } from '../../../components/VerkaeuferHinweis'
+import { getSiteSettings } from '../../../lib/payload'
 
 export const metadata: Metadata = {
   title: 'Bestellbestätigung',
@@ -19,6 +21,7 @@ export default async function OrderConfirmationPage({
   searchParams: Promise<{ session_id?: string }>
 }) {
   const { session_id: sessionId } = await searchParams
+  const settings = await getSiteSettings()
 
   let email: string | null = null
   let total: number | null = null
@@ -69,6 +72,12 @@ export default async function OrderConfirmationPage({
               </div>
             </div>
           ) : null}
+
+          <VerkaeuferHinweis
+            titel={settings.sellerNotice?.title}
+            text={settings.sellerNotice?.text}
+            abstandOben
+          />
 
           <div className="notice notice--info" style={{ marginTop: '2rem' }}>
             Wir versenden aus Deutschland. Die Sendungsnummer bekommst du per E-Mail, sobald das Paket unterwegs

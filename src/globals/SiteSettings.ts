@@ -142,6 +142,30 @@ export const SiteSettings: GlobalConfig = {
             },
             { name: 'checkoutNote', type: 'textarea', label: 'Hinweis im Warenkorb' },
             {
+              name: 'sellerNotice',
+              type: 'group',
+              label: 'Hinweis auf den Verkäufer',
+              admin: {
+                description:
+                  'Erscheint hervorgehoben im Warenkorb, auf der Kasse, auf der Bestellbestätigung und in der Bestätigungsmail. Zweck: Der Kunde soll beim Kauf nicht darüber stolpern, dass Marke und Verkäufer nicht dieselbe Firma sind. Beide Felder leer lassen blendet den Hinweis überall aus.',
+              },
+              fields: [
+                {
+                  name: 'title',
+                  type: 'text',
+                  label: 'Überschrift',
+                  defaultValue: 'Versand und Rechnung über die ProVerDa GmbH',
+                },
+                {
+                  name: 'text',
+                  type: 'textarea',
+                  label: 'Text',
+                  defaultValue:
+                    'Diesen Shop betreibt die ProVerDa GmbH. Sie ist Ihre Vertragspartnerin, übernimmt Versand und Distribution und stellt Ihnen die Rechnung. Die Batterien der Marke BULLTRON RACE werden von der BULLTRON GmbH verantwortet.',
+                },
+              ],
+            },
+            {
               name: 'legal',
               type: 'group',
               label: 'Rechtliche Pflichtangaben',

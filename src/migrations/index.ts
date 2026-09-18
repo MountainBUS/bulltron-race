@@ -7,6 +7,7 @@ import * as migration_20260914_125405_preisliste_082026 from './20260914_125405_
 import * as migration_20260914_125701_erreichbarkeit from './20260914_125701_erreichbarkeit';
 import * as migration_20260914_144854_lieferzeit_felder from './20260914_144854_lieferzeit_felder';
 import * as migration_20260914_150322_rennteams from './20260914_150322_rennteams';
+import * as migration_20260918_130543_verkaeufer_hinweis from './20260918_130543_verkaeufer_hinweis';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260914_150322_rennteams.up,
     down: migration_20260914_150322_rennteams.down,
-    name: '20260914_150322_rennteams'
+    name: '20260914_150322_rennteams',
+  },
+  {
+    up: migration_20260918_130543_verkaeufer_hinweis.up,
+    down: migration_20260918_130543_verkaeufer_hinweis.down,
+    name: '20260918_130543_verkaeufer_hinweis'
   },
 ];

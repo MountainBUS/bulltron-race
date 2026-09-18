@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSiteSettings } from '../../../lib/payload'
 import { CartView } from '../../../components/CartView'
+import { VerkaeuferHinweis } from '../../../components/VerkaeuferHinweis'
 
 export const metadata: Metadata = {
   title: 'Warenkorb',
@@ -28,6 +29,8 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
             <span className="eyebrow">Warenkorb</span>
             <h1 className="h-lg">Deine Auswahl</h1>
           </div>
+
+          <VerkaeuferHinweis titel={settings.sellerNotice?.title} text={settings.sellerNotice?.text} />
 
           {query?.abbruch ? (
             <div className="notice" style={{ marginBottom: '1.5rem' }}>

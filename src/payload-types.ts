@@ -190,6 +190,9 @@ export interface Product {
   compareAtPrice?: number | null;
   sku?: string | null;
   availability?: ('in_stock' | 'low_stock' | 'on_request' | 'sold_out') | null;
+  /**
+   * Erscheint auf der Produktseite und ist damit eine Zusage an den Kunden. Leer lassen, solange keine belastbare Lieferzeit feststeht — dann steht dort nichts.
+   */
   deliveryTime?: string | null;
   /**
    * Dreizehnstellig, aus der Preisliste. Wird für Preisportale und Warenwirtschaft gebraucht.
@@ -1425,11 +1428,11 @@ export interface SiteSetting {
   copyright?: string | null;
   paymentNote?: string | null;
   /**
-   * Dieser Betrag wird beim Kauf tatsächlich abgebucht. Lithium-Batterien sind Gefahrgut — bitte gegen die echten Konditionen des Versanddienstleisters prüfen.
+   * Standardversand als Gefahrgut, von Bulltron mit 17,90 € angegeben. Dieser Betrag wird beim Kauf tatsächlich abgebucht.
    */
   shippingCost?: number | null;
   /**
-   * 0 = nie versandfrei
+   * 0 = nie versandfrei. Eine Freigrenze ist eine Zusage an den Kunden — nur eintragen, wenn sie wirklich gilt.
    */
   freeShippingFrom?: number | null;
   taxRate?: number | null;
@@ -1449,6 +1452,13 @@ export interface SiteSetting {
       }[]
     | null;
   checkoutNote?: string | null;
+  /**
+   * Erscheint hervorgehoben im Warenkorb, auf der Kasse, auf der Bestellbestätigung und in der Bestätigungsmail. Zweck: Der Kunde soll beim Kauf nicht darüber stolpern, dass Marke und Verkäufer nicht dieselbe Firma sind. Beide Felder leer lassen blendet den Hinweis überall aus.
+   */
+  sellerNotice?: {
+    title?: string | null;
+    text?: string | null;
+  };
   legal?: {
     priceNote?: string | null;
     termsUrl?: string | null;
@@ -1626,6 +1636,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         id?: T;
       };
   checkoutNote?: T;
+  sellerNotice?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+      };
   legal?:
     | T
     | {

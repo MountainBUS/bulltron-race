@@ -41,6 +41,10 @@ const einstellungen = {
   termsUrl: '/agb',
   privacyUrl: '/datenschutz',
   imprintUrl: '/impressum',
+  sellerNotice: {
+    title: 'Versand und Rechnung über die ProVerDa GmbH',
+    text: 'Diesen Shop betreibt die ProVerDa GmbH. Sie ist Ihre Vertragspartnerin, übernimmt Versand und Distribution und stellt Ihnen die Rechnung. Die Batterien der Marke BULLTRON RACE werden von der BULLTRON GmbH verantwortet.',
+  },
 }
 
 const logo = await logoAnhang()

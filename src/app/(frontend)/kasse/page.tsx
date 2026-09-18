@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSiteSettings } from '../../../lib/payload'
 import { CheckoutForm } from '../../../components/CheckoutForm'
+import { VerkaeuferHinweis } from '../../../components/VerkaeuferHinweis'
 
 // Inhalte kommen aus dem Backend und sollen ohne Rebuild sichtbar werden.
 export const dynamic = 'force-dynamic'
@@ -33,6 +34,8 @@ export default async function CheckoutPage() {
             <span className="eyebrow">Schritt 2 von 3</span>
             <h1 className="h-lg">Bestellung prüfen</h1>
           </div>
+
+          <VerkaeuferHinweis titel={settings.sellerNotice?.title} text={settings.sellerNotice?.text} />
 
           <CheckoutForm
             shippingCost={settings.shippingCost ?? 0}

@@ -310,6 +310,29 @@ const panel = (titel: string, zeilen: string): string => `
   </td>
 </tr>`
 
+/* Hinweis auf den Verkäufer — dieselbe Aussage wie im Warenkorb, damit Kunde
+   und Rechnung nicht auseinanderlaufen. Linke Kante in der Primärfarbe statt
+   eines Warntons: auffallen ja, nach Fehler aussehen nein. */
+const verkaeuferHinweis = (e: Einstellungen): string => {
+  const titel = String(e.sellerNotice?.title ?? '').trim()
+  const text = String(e.sellerNotice?.text ?? '').trim()
+  if (!titel && !text) return ''
+
+  return `
+<tr>
+  <td style="padding:30px 32px 0 32px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARBE.panel}" style="background-color:${FARBE.panel};border-left:3px solid ${FARBE.rot}">
+      <tr>
+        <td style="padding:20px 24px">
+          ${titel ? `<div style="font-family:${SCHRIFT};font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:${FARBE.hell}">${sicher(titel)}</div>` : ''}
+          ${text ? `<div style="font-family:${SCHRIFT};font-size:14px;line-height:22px;color:${FARBE.text};margin-top:${titel ? '8' : '0'}px">${sicher(text)}</div>` : ''}
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>`
+}
+
 const fussbereich = (e: Einstellungen, rechtslinks: Array<{ text: string; url: string }>): string => `
 <tr>
   <td bgcolor="${FARBE.grund}" style="background-color:${FARBE.grund};padding:30px 32px;border-top:1px solid ${FARBE.linie}">
@@ -374,6 +397,8 @@ export const kundenHtml = (
       ${absatz('vielen Dank für Ihre Bestellung. Hiermit bestätigen wir deren Eingang. Der Kaufvertrag kommt zustande, sobald wir die Annahme der Bestellung erklären oder die Ware versenden.', 14)}
     </td>
   </tr>
+
+  ${verkaeuferHinweis(e)}
 
   <tr>
     <td style="padding:32px 32px 0 32px">
@@ -468,6 +493,9 @@ const kundenText = (b: Bestellung, e: Einstellungen, basis: string): string =>
     `Gesamtbetrag: ${formatPrice(b.total ?? 0)}`,
     e.priceNote ? String(e.priceNote) : '',
     '',
+    ...(String(e.sellerNotice?.title ?? '').trim() || String(e.sellerNotice?.text ?? '').trim()
+      ? [String(e.sellerNotice?.title ?? '').trim().toUpperCase(), String(e.sellerNotice?.text ?? '').trim(), '']
+      : []),
     'LIEFERADRESSE',
     ...anschriftZeilen(b),
     '',
