@@ -1625,17 +1625,68 @@ main { flex: 1; }
   fill: var(--primary);
   stroke: #12171a;
   stroke-width: 1.5;
-  transition: transform 0.12s ease;
-  transform-origin: 0 0;
+  transition: stroke 0.12s ease, stroke-width 0.12s ease;
 }
 .haendler-karte__punkt { fill: #ffffff; pointer-events: none; }
-.haendler-karte__marker--hervor .haendler-karte__nadel { fill: var(--accent); }
+
+/* Der Hof ersetzt die frühere Vergrößerung beim Überfahren. `transform-origin`
+   griff hier nicht wie erwartet: Gemessen wuchs die Nadel um ihre eigene Mitte,
+   und die Spitze wanderte dabei 3,5 Bildpunkte vom Ort weg. Eine Deckkraft
+   bewegt nichts, und die Spitze bleibt, wo sie hingehört. */
+.haendler-karte__hof {
+  fill: var(--primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s ease;
+}
+
+/* Hervorgehobener Partner: größere Nadel (eigene Geometrie, siehe Bauteil),
+   weiße Kante, dauerhafter Hof und ein Ring darum. Rot wie der Rahmen, den der
+   Eintrag in der Liste bekommt — Karte und Liste sollen dasselbe sagen. Das
+   frühere Grün war der Akzentton der Status-Etiketten und ließ zwei
+   verschiedene Dinge gleich aussehen. */
+.haendler-karte__marker--hervor .haendler-karte__nadel { stroke: #ffffff; stroke-width: 2.2; }
+.haendler-karte__marker--hervor .haendler-karte__hof { opacity: 0.2; }
+.haendler-karte__ring {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.haendler-karte__marker:hover .haendler-karte__hof,
+.haendler-karte__marker--aktiv .haendler-karte__hof,
+.haendler-karte__marker:focus-visible .haendler-karte__hof { opacity: 0.32; }
 .haendler-karte__marker:hover .haendler-karte__nadel,
 .haendler-karte__marker--aktiv .haendler-karte__nadel,
 .haendler-karte__marker:focus-visible .haendler-karte__nadel {
-  transform: scale(1.25);
+  stroke: #ffffff;
+  stroke-width: 2;
 }
-.haendler-karte__marker:focus-visible .haendler-karte__nadel { stroke: #ffffff; stroke-width: 2; }
+
+/* Namensfahne am hervorgehobenen Partner. */
+.haendler-karte__fahne {
+  position: absolute;
+  z-index: 2;
+  transform: translate(1.6rem, -50%);
+  padding: 0.1rem 0.4rem;
+  background: rgba(9, 12, 14, 0.82);
+  border-left: 2px solid var(--primary);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text);
+  pointer-events: none;
+}
+.haendler-karte__fahne--links {
+  transform: translate(calc(-100% - 1.6rem), -50%);
+  border-left: 0;
+  border-right: 2px solid var(--primary);
+}
 
 /* Hover-Karte am Marker.
    Kein `title`-Attribut mehr: Der Browser-Tooltip kommt erst nach einer Sekunde,
@@ -1716,5 +1767,6 @@ main { flex: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .haendler-karte__nadel { transition: none; }
+  .haendler-karte__nadel,
+  .haendler-karte__hof { transition: none; }
 }

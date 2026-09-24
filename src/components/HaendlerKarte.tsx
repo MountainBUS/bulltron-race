@@ -114,6 +114,9 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
           oben: (y / karte.hoehe) * 100,
         }
       })
+      /* Hervorgehobene zuletzt zeichnen: In SVG liegt oben, was später kommt.
+         Sonst verschwindet der größere Marker unter einem kleinen daneben. */
+      .sort((a, b) => Number(Boolean(a.featured)) - Number(Boolean(b.featured)))
   }, [karte, haendler])
 
   const eigenerPunkt = useMemo(() => {
@@ -195,13 +198,63 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
                   if (e.key === 'Escape') setAktiv(null)
                 }}
               >
-                {/* Tropfenform: Spitze sitzt genau auf dem Ort, Kreis darüber. */}
-                <path d="M0 0 L-9 -14 A10.5 10.5 0 1 1 9 -14 Z" className="haendler-karte__nadel" />
-                <circle cx={0} cy={-20} r={4.2} className="haendler-karte__punkt" />
+                {/* Der Hof liegt hinter der Nadel und wird beim Überfahren
+                    eingeblendet. Bewusst kein `transform: scale` auf der Nadel:
+                    Der Bezugspunkt einer CSS-Transformation im SVG ist die Mitte
+                    des eigenen Kastens, nicht die Spitze — gemessen wanderte die
+                    Spitze dabei um 3,5 Bildpunkte vom Ort weg. */}
+                <circle
+                  cx={0}
+                  cy={p.featured ? -28 : -19.5}
+                  r={p.featured ? 30 : 17}
+                  className="haendler-karte__hof"
+                />
+                {p.featured ? (
+                  <circle cx={0} cy={-28} r={22} className="haendler-karte__ring" />
+                ) : null}
+                {/* Tropfenform: Spitze sitzt genau auf dem Ort, Kreis darüber.
+                    Der hervorgehobene Partner bekommt dieselbe Form in groß —
+                    als eigene Geometrie, damit die Spitze am Ort bleibt. */}
+                <path
+                  d={
+                    p.featured
+                      ? 'M0 0 L-13 -20.3 A15.2 15.2 0 1 1 13 -20.3 Z'
+                      : 'M0 0 L-9 -14 A10.5 10.5 0 1 1 9 -14 Z'
+                  }
+                  className="haendler-karte__nadel"
+                />
+                <circle
+                  cx={0}
+                  cy={p.featured ? -29 : -20}
+                  r={p.featured ? 6.1 : 4.2}
+                  className="haendler-karte__punkt"
+                />
               </g>
             )
           })}
         </svg>
+
+        {/* Namensfahne am hervorgehobenen Partner: Er soll auch ohne Zeiger und
+            ohne Antippen als solcher zu erkennen sein. Der Text kommt aus dem
+            Namen im Backend, nichts wird dazugedichtet. */}
+        {punkte
+          .filter((p) => p.featured)
+          .map((p) => (
+            <span
+              key={`fahne-${p.id}`}
+              className={`haendler-karte__fahne${
+                p.links > 55 ? ' haendler-karte__fahne--links' : ''
+              }`}
+              style={{
+                left: `${p.links}%`,
+                /* Auf Höhe des Nadelkopfs, nicht der Spitze: 28 von 1307 Einheiten. */
+                top: `${p.oben - (28 / karte.hoehe) * 100}%`,
+              }}
+              aria-hidden="true"
+            >
+              {p.name}
+            </span>
+          ))}
 
         {offen ? (
           <div
