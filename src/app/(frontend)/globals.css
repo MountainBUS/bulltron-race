@@ -1589,12 +1589,19 @@ main { flex: 1; }
   border: 1px solid var(--line);
 }
 .haendler-karte--laedt { min-height: 240px; }
+/* Die Bühne trägt die Hover-Karte: Sie ist genau so breit wie das SVG, deshalb
+   kann die Karte in Prozent positioniert werden und wandert in jeder
+   Bildschirmbreite mit dem Marker mit. */
+.haendler-karte__buehne {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
 .haendler-karte svg {
   display: block;
   width: 100%;
-  max-width: 420px;
   height: auto;
-  margin: 0 auto;
   /* Kein overflow: visible. Die Nachbarländer reichen absichtlich über den
      Ausschnitt hinaus und sollen am Rahmen abgeschnitten werden — sonst laufen
      Polen und Dänemark quer über die Seite. */
@@ -1629,6 +1636,77 @@ main { flex: 1; }
   transform: scale(1.25);
 }
 .haendler-karte__marker:focus-visible .haendler-karte__nadel { stroke: #ffffff; stroke-width: 2; }
+
+/* Hover-Karte am Marker.
+   Kein `title`-Attribut mehr: Der Browser-Tooltip kommt erst nach einer Sekunde,
+   kann keine Auszeichnung und schon gar keinen Link. Diese Karte liegt als
+   normales HTML über dem SVG. Sie ist für Vorlesesoftware ausgeblendet, weil ihr
+   Link nicht in der Tab-Reihenfolge liegt — dieselben Angaben stehen in der
+   Beschriftung des Markers und vollständig im Eintrag in der Liste darunter. */
+.haendler-karte__info {
+  position: absolute;
+  z-index: 3;
+  width: max-content;
+  max-width: 13rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--primary);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  text-align: left;
+  pointer-events: auto;
+  /* Standard: über dem Marker, mit Luft für die Tropfenspitze. */
+  transform: translate(-50%, calc(-100% - 1.4rem));
+}
+.haendler-karte__info--links { transform: translate(-0.75rem, calc(-100% - 1.4rem)); }
+.haendler-karte__info--rechts { transform: translate(calc(-100% + 0.75rem), calc(-100% - 1.4rem)); }
+.haendler-karte__info--unten { transform: translate(-50%, 0.6rem); }
+.haendler-karte__info--unten.haendler-karte__info--links { transform: translate(-0.75rem, 0.6rem); }
+.haendler-karte__info--unten.haendler-karte__info--rechts { transform: translate(calc(-100% + 0.75rem), 0.6rem); }
+
+.haendler-karte__info-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.haendler-karte__info-ort {
+  margin: 0.3rem 0 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+.haendler-karte__info-arten {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.45rem 0 0 0;
+}
+.haendler-karte__info-art {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--accent);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.haendler-karte__info-art--frei { border-color: var(--primary); color: var(--primary); }
+.haendler-karte__info-link {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.76rem;
+  word-break: break-all;
+}
+
+/* Auf dem Telefon führt kein Zeiger über die Karte: Dort tippt man den Marker
+   an und springt in die Liste. Die Hover-Karte wäre nur im Weg. */
+@media (hover: none) {
+  .haendler-karte__info { display: none; }
+}
 
 /* Ziel des Klicks in der Liste kurz hervorheben. */
 .dealer-karte--markiert {
