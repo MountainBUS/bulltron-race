@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IconArrow, IconCheck, IconMail, IconPhone, IconPin } from './Icons'
+import { HaendlerKarte } from './HaendlerKarte'
 import {
   codeSuchen,
   entfernung,
@@ -299,6 +300,20 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
           </a>
         </div>
       ) : (
+        <>
+        <HaendlerKarte
+          haendler={ergebnis}
+          standort={standort}
+          onAuswahl={(id) => {
+            const ziel = document.getElementById(`haendler-${id}`)
+            if (!ziel) return
+            ziel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            /* Kurz hervorheben, damit klar ist, welcher Eintrag gemeint war. */
+            ziel.classList.add('dealer-karte--markiert')
+            window.setTimeout(() => ziel.classList.remove('dealer-karte--markiert'), 1800)
+          }}
+        />
+
         <div className="dealer-liste">
           {ergebnis.map((h) => {
             const anschrift = [h.street, [h.postalCode, h.city].filter(Boolean).join(' ')]
@@ -309,7 +324,11 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
               : null
 
             return (
-              <article key={h.id} className={`dealer-karte${h.featured ? ' dealer-karte--hervor' : ''}`}>
+              <article
+                key={h.id}
+                id={`haendler-${h.id}`}
+                className={`dealer-karte${h.featured ? ' dealer-karte--hervor' : ''}`}
+              >
                 <div className="dealer-karte__kopf">
                   <div>
                     <h3>{h.name}</h3>
@@ -392,6 +411,7 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
             )
           })}
         </div>
+        </>
       )}
 
       {ohneKoordinaten > 0 ? (

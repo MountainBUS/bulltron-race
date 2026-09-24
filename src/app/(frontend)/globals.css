@@ -1577,3 +1577,66 @@ main { flex: 1; }
   .verkaeufer-hinweis { padding: 1rem; gap: 0.7rem; }
   .verkaeufer-hinweis__symbol { width: 1.6rem; height: 1.6rem; }
 }
+
+/* --- Händlerkarte -------------------------------------------------------- */
+/* Gezeichnet aus einer eigenen Datei, nicht aus Kacheln eines fremden Servers.
+   Deshalb keine Rasterbilder, nur Pfade — sie skalieren verlustfrei und
+   brauchen weder Schlüssel noch Einwilligung. */
+.haendler-karte {
+  margin: 0 0 2rem 0;
+  padding: 1.25rem;
+  background: var(--surface-2, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--line);
+}
+.haendler-karte--laedt { min-height: 240px; }
+.haendler-karte svg {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+  /* Kein overflow: visible. Die Nachbarländer reichen absichtlich über den
+     Ausschnitt hinaus und sollen am Rahmen abgeschnitten werden — sonst laufen
+     Polen und Dänemark quer über die Seite. */
+  overflow: hidden;
+}
+.haendler-karte figcaption {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+.haendler-karte__nachbar { fill: rgba(255, 255, 255, 0.04); stroke: rgba(255, 255, 255, 0.07); stroke-width: 1; }
+.haendler-karte__land { fill: rgba(255, 255, 255, 0.09); stroke: rgba(255, 255, 255, 0.22); stroke-width: 1.4; }
+
+.haendler-karte__standort circle { fill: var(--accent); }
+.haendler-karte__standort-hof { fill: var(--accent); opacity: 0.18; }
+
+.haendler-karte__marker { cursor: pointer; outline: none; }
+.haendler-karte__nadel {
+  fill: var(--primary);
+  stroke: #12171a;
+  stroke-width: 1.5;
+  transition: transform 0.12s ease;
+  transform-origin: 0 0;
+}
+.haendler-karte__punkt { fill: #ffffff; pointer-events: none; }
+.haendler-karte__marker--hervor .haendler-karte__nadel { fill: var(--accent); }
+.haendler-karte__marker:hover .haendler-karte__nadel,
+.haendler-karte__marker--aktiv .haendler-karte__nadel,
+.haendler-karte__marker:focus-visible .haendler-karte__nadel {
+  transform: scale(1.25);
+}
+.haendler-karte__marker:focus-visible .haendler-karte__nadel { stroke: #ffffff; stroke-width: 2; }
+
+/* Ziel des Klicks in der Liste kurz hervorheben. */
+.dealer-karte--markiert {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  transition: outline-color 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haendler-karte__nadel { transition: none; }
+}
