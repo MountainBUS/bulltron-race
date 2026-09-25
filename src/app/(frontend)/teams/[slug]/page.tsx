@@ -254,6 +254,7 @@ export default async function TeamDetailPage({ params }: Props) {
                       <div className="table-wrap">
                         <table className="table-specs">
                           <tbody>
+                            <Datenzeile label="Fahrer" wert={v.driver} />
                             <Datenzeile label="Motor / Hubraum / Leistung" wert={v.engine} />
                             <Datenzeile label="Besonderheiten und Umbauten" wert={v.modifications} />
                             <Datenzeile

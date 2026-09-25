@@ -144,6 +144,15 @@ export const Teams: CollectionConfig = {
               },
               fields: [
                 {
+                  name: 'driver',
+                  type: 'text',
+                  label: 'Fahrer',
+                  admin: {
+                    description:
+                      'Wer fährt dieses Fahrzeug? Nur nötig, wenn das Team mehrere Fahrer hat — sonst bleibt das Feld leer und erscheint auch nicht auf der Seite.',
+                  },
+                },
+                {
                   type: 'row',
                   fields: [
                     { name: 'manufacturer', type: 'text', label: 'Hersteller', admin: { width: '40%' } },

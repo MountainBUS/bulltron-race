@@ -8,6 +8,7 @@ import * as migration_20260914_125701_erreichbarkeit from './20260914_125701_err
 import * as migration_20260914_144854_lieferzeit_felder from './20260914_144854_lieferzeit_felder';
 import * as migration_20260914_150322_rennteams from './20260914_150322_rennteams';
 import * as migration_20260918_130543_verkaeufer_hinweis from './20260918_130543_verkaeufer_hinweis';
+import * as migration_20260925_074500_fahrer_am_fahrzeug from './20260925_074500_fahrer_am_fahrzeug';
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20260918_130543_verkaeufer_hinweis.up,
     down: migration_20260918_130543_verkaeufer_hinweis.down,
     name: '20260918_130543_verkaeufer_hinweis'
+  },
+  {
+    up: migration_20260925_074500_fahrer_am_fahrzeug.up,
+    down: migration_20260925_074500_fahrer_am_fahrzeug.down,
+    name: '20260925_074500_fahrer_am_fahrzeug'
   },
 ];
