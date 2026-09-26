@@ -19,10 +19,9 @@
  * Welche für den Händlereintrag gelten soll, muss beim Händler nachgefragt
  * werden.
  *
- * KEINE KOORDINATEN: Die Postleitzahlentabelle deckt Deutschland, Österreich
- * und die Schweiz ab, nicht Schweden. Der Eintrag steht deshalb in der Liste,
- * aber nicht auf der Karte und nicht in der Umkreissuche — die Karte zeigt
- * ohnehin nur den deutschsprachigen Raum. Das ist gewollt, kein Fehler.
+ * KOORDINATEN kommen wie bei jedem anderen Eintrag aus der Postleitzahl: Die
+ * Tabelle und der Kartenausschnitt decken seit dem 26.09.2026 auch Schweden ab.
+ * 343 37 liegt bei 56,55 Grad Nord und 14,14 Grad Ost.
  */
 import { getPayload } from 'payload'
 import config from '../payload.config'
@@ -69,8 +68,6 @@ const haendler = await payload.create({
       '- Welche Anschrift soll öffentlich stehen? Die Seite nennt zwei: Borggatan 2, 343 37 Älmhult (Kopf, Fuß, „Om oss" — hier eingetragen) und Prismagatan 10B, 343 38 Älmhult (Köpvillkor, Sitz der Firma Vagnify).',
       '- Nachnamen der beiden Ansprechpartner. Die Seite nennt nur „Daniela" und „Christian".',
       '- Logo für den Eintrag.',
-      '',
-      'Der Eintrag hat bewusst keine Koordinaten: Die Postleitzahlentabelle kennt nur Deutschland, Österreich und die Schweiz, und die Karte zeigt nur diesen Ausschnitt. Der Händler erscheint deshalb in der Liste, aber nicht auf der Karte und nicht in der Umkreissuche.',
       '',
       'Die Kurzbeschreibung ist meine Zusammenfassung der Selbstdarstellung auf „Om oss", kein Zitat. Der freie Status „Händler für Schweden" folgt dem Muster von „Händler für die Schweiz".',
     ].join('\n'),

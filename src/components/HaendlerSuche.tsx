@@ -98,8 +98,14 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
       const daten = geo ?? (await geoLaden())
       if (!daten || abgebrochen) return
 
-      if (/^\d{4,5}$/.test(eingabe)) {
-        const treffer = codeSuchen(daten, eingabe)
+      /* Schwedische Postleitzahlen werden mit Leerzeichen geschrieben:
+         „343 37". Ohne diesen Schritt fällt die Eingabe durch die
+         Ziffernprüfung und landet in der Ortsnamensuche, wo sie nichts
+         findet — nachgemessen, bevor es jemandem auffällt. */
+      const ziffern = eingabe.replace(/\s+/g, '')
+
+      if (/^\d{4,5}$/.test(ziffern)) {
+        const treffer = codeSuchen(daten, ziffern)
         if (treffer) {
           setStandort({
             lat: treffer.lat,

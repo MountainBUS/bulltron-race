@@ -6,19 +6,19 @@
  * dem Server — es benutzt bewusst keine Node-Bausteine.
  */
 
-export type GeoRoh = { plz: string; plz4?: string; orte: string }
+export type GeoRoh = { plz: string; plzLand?: string; orte: string }
 
 export type Ort = { name: string; lat: number; lng: number; land: number }
 
 export type GeoDaten = {
   /** Deutsche fünfstellige Postleitzahlen. */
   plz: Map<string, [number, number]>
-  /** Vierstellige Codes, Schlüssel mit Länderkürzel: AT1010, CH8001. */
-  plz4: Map<string, [number, number]>
+  /** Alle übrigen Länder, Schlüssel mit Länderkürzel: AT1010, CH8001, SE34337. */
+  plzLand: Map<string, [number, number]>
   orte: Ort[]
 }
 
-export const LAENDER = ['DE', 'AT', 'CH'] as const
+export const LAENDER = ['DE', 'AT', 'CH', 'SE'] as const
 
 /** Hundertstelgrad aus der Datei zurück in Grad. */
 const grad = (wert: string) => Number(wert) / 100
@@ -43,26 +43,42 @@ export const geoAuswerten = (roh: GeoRoh): GeoDaten => {
     if (!name) continue
     orte.push({ name, lat: grad(lat), lng: grad(lng), land: Number(land) || 0 })
   }
-  return { plz: codeTabelle(roh.plz), plz4: codeTabelle(roh.plz4), orte }
+  return { plz: codeTabelle(roh.plz), plzLand: codeTabelle(roh.plzLand), orte }
 }
 
-/** Postleitzahl in einem der drei Länder nachschlagen. */
+/** Postleitzahl nachschlagen. */
 export const codeSuchen = (
   daten: GeoDaten,
   code: string,
   land?: string,
 ): { lat: number; lng: number; land: string } | null => {
-  const sauber = code.trim()
+  /* Schwedische Codes werden mit Leerzeichen geschrieben: „343 37". In der
+     Tabelle stehen sie ohne. */
+  const sauber = code.trim().replace(/\s+/g, '')
+
   if (/^\d{5}$/.test(sauber)) {
-    const treffer = daten.plz.get(sauber)
-    return treffer ? { lat: treffer[0], lng: treffer[1], land: 'DE' } : null
+    /* Fünf Ziffern gibt es in Deutschland und in Schweden. Ist das Land
+       bekannt, wird nur dort gesucht. Sonst zuerst Deutschland — das ist der
+       häufige Fall — und erst danach Schweden. */
+    if (land === 'SE') {
+      const treffer = daten.plzLand.get(`SE${sauber}`)
+      return treffer ? { lat: treffer[0], lng: treffer[1], land: 'SE' } : null
+    }
+    const deutsch = daten.plz.get(sauber)
+    if (deutsch) return { lat: deutsch[0], lng: deutsch[1], land: 'DE' }
+    if (!land) {
+      const schwedisch = daten.plzLand.get(`SE${sauber}`)
+      if (schwedisch) return { lat: schwedisch[0], lng: schwedisch[1], land: 'SE' }
+    }
+    return null
   }
+
   if (/^\d{4}$/.test(sauber)) {
     /* Vierstellige Codes gibt es in Österreich und in der Schweiz. Ist das Land
        bekannt, wird nur dort gesucht, sonst der Reihe nach. */
     const reihenfolge = land === 'CH' ? ['CH', 'AT'] : land === 'AT' ? ['AT'] : ['AT', 'CH']
     for (const l of reihenfolge) {
-      const treffer = daten.plz4.get(`${l}${sauber}`)
+      const treffer = daten.plzLand.get(`${l}${sauber}`)
       if (treffer) return { lat: treffer[0], lng: treffer[1], land: l }
     }
   }

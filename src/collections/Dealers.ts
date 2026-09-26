@@ -108,12 +108,10 @@ export const Dealers: CollectionConfig = {
                     { label: 'Deutschland', value: 'DE' },
                     { label: 'Österreich', value: 'AT' },
                     { label: 'Schweiz', value: 'CH' },
-                    /* Für Partner außerhalb des deutschsprachigen Raums. Die
-                       Postleitzahlentabelle kennt diese Länder nicht, solche
-                       Einträge bleiben deshalb ohne Koordinaten: Sie stehen in
-                       der Liste, nicht auf der Karte und nicht in der
-                       Umkreissuche. Das Land erscheint dafür in der
-                       Anschrift. */
+                    /* Seit dem Händler in Älmhult. Die Postleitzahlentabelle
+                       und der Kartenausschnitt decken Schweden mit ab; die
+                       Einträge bekommen also Koordinaten wie alle anderen. Das
+                       Land erscheint zusätzlich in der Anschrift. */
                     { label: 'Schweden', value: 'SE' },
                   ],
                   admin: { width: '25%' },
@@ -126,7 +124,7 @@ export const Dealers: CollectionConfig = {
               label: 'Koordinaten',
               admin: {
                 description:
-                  'Werden beim Speichern aus der Postleitzahl ermittelt — für Deutschland, Österreich und die Schweiz. Für eine genauere Position hier von Hand eintragen und den Haken darunter setzen, dann bleiben die Werte unangetastet.',
+                  'Werden beim Speichern aus der Postleitzahl ermittelt — für Deutschland, Österreich, die Schweiz und Schweden. Für eine genauere Position hier von Hand eintragen und den Haken darunter setzen, dann bleiben die Werte unangetastet.',
               },
               fields: [
                 {

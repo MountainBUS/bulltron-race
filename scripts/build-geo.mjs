@@ -6,9 +6,9 @@
  * Dateigröße. Satztrenner ist der Zeilenumbruch, Feldtrenner das Semikolon.
  * Koordinaten stehen als Hundertstelgrad ohne Komma (5332 = 53,32 Grad).
  *
- *   plz:  "21449;5332;1028"        deutsche Postleitzahl -> Koordinate
- *   plz4: "AT1010;4821;1637"       vierstellige Codes in Österreich und der Schweiz
- *   orte: "Radbruch;5332;1028;0"   Ortsname -> Koordinate, Land 0=DE 1=AT 2=CH
+ *   plz:      "21449;5332;1028"      deutsche Postleitzahl -> Koordinate
+ *   plzLand:  "AT1010;4821;1637"      alle übrigen Länder, Schlüssel mit Kürzel
+ *   orte:     "Radbruch;5332;1028;0"  Ortsname -> Koordinate, Land 0=DE 1=AT 2=CH 3=SE
  *
  * Damit läuft die Umkreissuche vollständig im Browser: kein Kartendienst wird
  * angefragt, keine Adresse und keine IP verlässt die Seite, und die Suche
@@ -21,6 +21,7 @@
  *   data/DE.zip -> zipcodes.de.csv
  *   data/AT.zip -> zipcodes.at.csv
  *   data/CH.zip -> zipcodes.ch.csv
+ *   data/SE.zip -> zipcodes.se.csv
  * Danach:  node scripts/build-geo.mjs
  */
 import fs from 'node:fs'
@@ -31,6 +32,12 @@ const LAENDER = [
   { code: 'DE', datei: 'zipcodes.de.csv', index: 0 },
   { code: 'AT', datei: 'zipcodes.at.csv', index: 1 },
   { code: 'CH', datei: 'zipcodes.ch.csv', index: 2 },
+  /* Schweden seit 26.09.2026, wegen des Händlers in Älmhult. Schwedische
+     Codes sind fünfstellig und werden mit Leerzeichen geschrieben („343 38").
+     Das Leerzeichen fällt beim Schlüssel weg, und weil fünf Ziffern sonst mit
+     einer deutschen Postleitzahl verwechselbar wären, steht das Länderkürzel
+     davor. */
+  { code: 'SE', datei: 'zipcodes.se.csv', index: 3 },
 ]
 
 /* Großkunden-Postleitzahlen tragen einen Firmennamen statt eines Ortes.
@@ -72,7 +79,7 @@ const norm = (s) =>
     .replace(/[^a-z0-9]/g, '')
 
 const plz = {}
-const plz4 = {}
+const plzLand = {}
 const ortSammler = new Map()
 const zaehler = {}
 
@@ -96,7 +103,8 @@ for (const land of LAENDER) {
 
     /* Mehrere Zeilen je Postleitzahl: der Mittelwert trifft die Fläche besser
        als der erste Treffer. */
-    const plzSchluessel = land.code === 'DE' ? code : `${land.code}${code}`
+    const ziffern = code.replace(/\s+/g, '')
+    const plzSchluessel = land.code === 'DE' ? ziffern : `${land.code}${ziffern}`
     const p = plzSammler.get(plzSchluessel) ?? { lat: 0, lng: 0, n: 0 }
     p.lat += lat
     p.lng += lng
@@ -110,9 +118,16 @@ for (const land of LAENDER) {
     const ortNehmen =
       land.code === 'DE' || !gemeinde || norm(ort) === norm(gemeinde)
 
+    /* Die schwedische Quelle schreibt den Ort klein („älmhult") und führt
+       denselben Namen in der Spalte `province` in richtiger Schreibweise.
+       Stimmen beide überein, wird die gepflegte Schreibweise genommen — in der
+       Vorschlagsliste steht sonst Kleingeschriebenes. */
+    const bezirk = f[5]
+    const anzeige = bezirk && norm(bezirk) === norm(ort) ? bezirk : ort
+
     if (ort && ortNehmen && !FIRMA.test(ort)) {
       const ortSchluessel = `${land.index}:${norm(ort)}`
-      const o = ortSammler.get(ortSchluessel) ?? { name: ort, land: land.index, lat: 0, lng: 0, n: 0 }
+      const o = ortSammler.get(ortSchluessel) ?? { name: anzeige, land: land.index, lat: 0, lng: 0, n: 0 }
       o.lat += lat
       o.lng += lng
       o.n += 1
@@ -123,7 +138,7 @@ for (const land of LAENDER) {
   for (const [schluessel, p] of plzSammler) {
     const wert = [hundertstel(p.lat / p.n), hundertstel(p.lng / p.n)]
     if (land.code === 'DE') plz[schluessel] = wert
-    else plz4[schluessel] = wert
+    else plzLand[schluessel] = wert
   }
   zaehler[land.code] = plzSammler.size
 }
@@ -138,7 +153,7 @@ const alsText = (eintraege) => eintraege.map((e) => e.join(';')).join('\n')
 
 const daten = {
   plz: alsText(Object.entries(plz).map(([code, w]) => [code, w[0], w[1]])),
-  plz4: alsText(Object.entries(plz4).map(([code, w]) => [code, w[0], w[1]])),
+  plzLand: alsText(Object.entries(plzLand).map(([code, w]) => [code, w[0], w[1]])),
   orte: alsText(orte),
 }
 
@@ -147,6 +162,11 @@ fs.mkdirSync(path.dirname(ziel), { recursive: true })
 fs.writeFileSync(ziel, JSON.stringify(daten))
 
 console.log('Postleitzahlen DE:', zaehler.DE)
-console.log('Postleitzahlen AT / CH:', zaehler.AT, '/', zaehler.CH)
-console.log('Orte gesamt:', orte.length, '(DE/AT/CH:', [0, 1, 2].map((i) => orte.filter((o) => o[3] === i).length).join('/') + ')')
+console.log('Postleitzahlen AT / CH / SE:', zaehler.AT, '/', zaehler.CH, '/', zaehler.SE)
+console.log(
+  'Orte gesamt:',
+  orte.length,
+  '(DE/AT/CH/SE:',
+  [0, 1, 2, 3].map((i) => orte.filter((o) => o[3] === i).length).join('/') + ')',
+)
 console.log('Dateigröße:', Math.round(fs.statSync(ziel).size / 1024) + ' KB')

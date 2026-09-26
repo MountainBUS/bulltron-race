@@ -170,12 +170,12 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
         <svg
           viewBox={`0 0 ${karte.breite} ${karte.hoehe}`}
           role="img"
-          aria-label={`Standorte von ${punkte.length} ${punkte.length === 1 ? 'Partner' : 'Partnern'} in Deutschland, Österreich und der Schweiz`}
+          aria-label={`Standorte von ${punkte.length} ${punkte.length === 1 ? 'Partner' : 'Partnern'} in Nord- und Mitteleuropa`}
         >
-          {Object.entries(karte.nachbarn).map(([name, d]) => (
+          {Object.entries(karte.umgebung).map(([name, d]) => (
             <path key={name} d={d} className="haendler-karte__nachbar" />
           ))}
-          {Object.entries(karte.lieferlaender).map(([name, d]) => (
+          {Object.entries(karte.kernlaender).map(([name, d]) => (
             <path key={name} d={d} className="haendler-karte__land" />
           ))}
 

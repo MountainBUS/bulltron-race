@@ -11,14 +11,14 @@ const laden = (): GeoDaten => {
     const datei = path.join(process.cwd(), 'public/daten/geo.json')
     zwischenspeicher = geoAuswerten(JSON.parse(fs.readFileSync(datei, 'utf8')) as GeoRoh)
   } catch {
-    zwischenspeicher = geoAuswerten({ plz: '', plz4: '', orte: '' })
+    zwischenspeicher = geoAuswerten({ plz: '', plzLand: '', orte: '' })
   }
   return zwischenspeicher
 }
 
 /**
- * Koordinaten zu einer Postleitzahl. Deutschland fünfstellig, Österreich und
- * die Schweiz vierstellig. Ohne Treffer null — dann bleibt der Eintrag ohne
+ * Koordinaten zu einer Postleitzahl. Deutschland und Schweden fünfstellig,
+ * Österreich und die Schweiz vierstellig. Ohne Treffer null — dann bleibt der Eintrag ohne
  * Koordinate und erscheint nur in der Gesamtliste.
  */
 export const koordinatenZuPlz = (

@@ -6,16 +6,20 @@
  * einer Stelle und wird nirgends nachgebaut.
  *
  * Mercator, weil die Umrisse so erzeugt wurden: Längengrade linear, Breitengrade
- * über den Logarithmus gestreckt. Auf dem Ausschnitt Deutschland, Österreich,
- * Schweiz ist die Verzerrung klein genug, dass niemand sie bemerkt.
+ * über den Logarithmus gestreckt. Über den ganzen Ausschnitt von den Alpen bis
+ * Nordschweden wächst die Verzerrung spürbar — Schweden erscheint größer, als
+ * es ist. Für eine Karte, die zeigt, wo die Partner ungefähr sitzen, ist das
+ * ohne Belang; die Marker liegen richtig, weil sie dieselbe Rechnung benutzen.
  */
 
 export type Kartendaten = {
   breite: number
   hoehe: number
   ausschnitt: { minLon: number; maxLon: number; minLat: number; maxLat: number }
-  lieferlaender: Record<string, string>
-  nachbarn: Record<string, string>
+  /** Länder, in denen Partner sitzen — kräftig gezeichnet. */
+  kernlaender: Record<string, string>
+  /** Umliegende Länder, nur als Zusammenhang, blass gezeichnet. */
+  umgebung: Record<string, string>
 }
 
 const mercY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))

@@ -16,9 +16,9 @@
  * Projekts — dieses Skript läuft einmal von Hand, das Ergebnis wird
  * eingecheckt.
  *
- * Projektion: Mercator, auf den Ausschnitt Deutschland, Österreich, Schweiz
- * eingepasst. Dieselbe Formel steckt in `src/lib/karte.ts`, damit die Marker
- * auf denselben Punkten landen wie die Umrisse.
+ * Projektion: Mercator, auf den unten festgelegten Ausschnitt eingepasst.
+ * Dieselbe Formel steckt in `src/lib/karte.ts`, damit die Marker auf denselben
+ * Punkten landen wie die Umrisse.
  */
 import fs from 'fs'
 import path from 'path'
@@ -29,9 +29,35 @@ if (!quelle) {
   process.exit(1)
 }
 
-/** Ländernummern nach ISO 3166-1. */
-const LIEFERLAENDER = ['276', '040', '756'] // Deutschland, Österreich, Schweiz
-const NACHBARN = ['250', '380', '203', '616', '528', '056', '208', '705', '703', '348', '442', '438']
+/* --- Ausschnitt und Länder ------------------------------------------------
+   Der Ausschnitt steht fest und richtet sich nicht mehr nach den Kernländern:
+   Mit Schweden dabei wäre eine eingepasste Karte 1000 x 2409 — ein schmaler
+   hoher Streifen, in dem Deutschland winzig ist. Nach Westen erweitert kommt
+   sie auf 1000 x 1291 und damit fast auf die Proportion der alten DACH-Karte
+   zurück. Die zusätzliche Fläche im Westen kostet nichts: Sie ist Umgebung,
+   und die Umgebungsländer sind grob gerastert.
+
+   Kernländer sind die Länder, in denen Partner sitzen. Kommt ein Partner in
+   einem neuen Land dazu, gehört dessen Nummer hier hinein und die Datei muss
+   neu erzeugt werden. */
+const AUSSCHNITT = { minLon: -5, maxLon: 31, minLat: 45.5, maxLat: 69.4 }
+
+/** Ländernummern nach ISO 3166-1 numerisch. */
+const KERN = [
+  '276', // Deutschland
+  '040', // Österreich
+  '756', // Schweiz
+  '752', // Schweden
+]
+
+const UMGEBUNG = [
+  '250', '826', '372', '528', '056', '442', '724', '620', // FR, GB, IE, NL, BE, LU, ES, PT
+  '380', '203', '616', '348', '703', '705', '191', '100', // IT, CZ, PL, HU, SK, SI, HR, BG
+  '642', '208', '578', '246', '233', '428', '440', '112', // RO, DK, NO, FI, EE, LV, LT, BY
+  '804', '643', '807', '688', '070', '008', '499', '275', // UA, RU, MK, RS, BA, AL, ME, PS
+]
+
+const BREITE = 1000
 
 /* --- TopoJSON entpacken ---------------------------------------------------
    Bewusst von Hand statt mit topojson-client: es sind dreißig Zeilen, und so
@@ -68,45 +94,71 @@ const flaechen = (geometrie) => {
   return []
 }
 
+/* --- Datumsgrenze ---------------------------------------------------------
+   Russlands Umriss läuft über die Datumsgrenze. Zwischen einem Punkt bei
+   +179 und dem nächsten bei -179 liegt in den Zahlen ein Sprung von 358 Grad,
+   und gezeichnet wird daraus eine Gerade quer über die ganze Karte — im
+   fertigen Bild ein helles Rechteck über halb Skandinavien. Gemessen: Der
+   Pfad reichte von x = -4861 bis x = 5136 bei 1000 Bildpunkten Breite.
+
+   Behoben, indem der Ring vorher auf einen durchgehenden Zahlenbereich
+   gebracht wird: Läuft er über mehr als 180 Grad, bekommen die negativen
+   Längengrade 360 dazu. Dann ist er monoton, und das Beschneiden darunter
+   greift sauber. */
+const entwirren = (punkte) => {
+  const lons = punkte.map((p) => p[0])
+  if (Math.max(...lons) - Math.min(...lons) <= 180) return punkte
+  return punkte.map(([lon, lat]) => [lon < 0 ? lon + 360 : lon, lat])
+}
+
+/* --- Beschneiden ----------------------------------------------------------
+   Sutherland-Hodgman gegen das Rechteck des Ausschnitts, mit etwas Luft.
+   Vorher wurden Länder ganz gezeichnet und der Überstand im Browser per
+   `overflow: hidden` abgeschnitten. Das sah gleich aus, kostete aber Bytes für
+   Umrisse, die nie jemand sieht — und half gegen die Datumsgrenze nicht.
+
+   Im Längen- und Breitengrad beschnitten, nicht in Bildpunkten: Die Mercator-
+   Projektion ist in beiden Achsen monoton, ein achsenparalleles Rechteck
+   bleibt also ein Rechteck, und die Zahlen sind hier lesbarer. */
+const LUFT = 2
+
+const beschneiden = (punkte, kante, drin, schnitt) => {
+  if (punkte.length === 0) return punkte
+  const ergebnis = []
+  for (let i = 0; i < punkte.length; i += 1) {
+    const a = punkte[i]
+    const b = punkte[(i + 1) % punkte.length]
+    const aDrin = drin(a)
+    const bDrin = drin(b)
+    if (aDrin) ergebnis.push(a)
+    if (aDrin !== bDrin) ergebnis.push(schnitt(a, b, kante))
+  }
+  return ergebnis
+}
+
+const rechteckBeschneiden = (punkte, { minLon, maxLon, minLat, maxLat }) => {
+  const l = minLon - LUFT
+  const r = maxLon + LUFT
+  const u = minLat - LUFT
+  const o = maxLat + LUFT
+  const teilX = (a, b, wert) => [wert, a[1] + ((b[1] - a[1]) * (wert - a[0])) / (b[0] - a[0])]
+  const teilY = (a, b, wert) => [a[0] + ((b[0] - a[0]) * (wert - a[1])) / (b[1] - a[1]), wert]
+  let p = punkte
+  p = beschneiden(p, l, (q) => q[0] >= l, teilX)
+  p = beschneiden(p, r, (q) => q[0] <= r, teilX)
+  p = beschneiden(p, u, (q) => q[1] >= u, teilY)
+  p = beschneiden(p, o, (q) => q[1] <= o, teilY)
+  return p
+}
+
 /* --- Projektion ----------------------------------------------------------- */
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))
 
-const laender = topo.objects.countries.geometries
-const gewaehlt = laender.filter((l) => [...LIEFERLAENDER, ...NACHBARN].includes(String(l.id)))
-const kern = laender.filter((l) => LIEFERLAENDER.includes(String(l.id)))
-
-/* Der Ausschnitt richtet sich nur nach den Lieferländern. Die Nachbarn laufen
-   an den Rändern ins Bild und werden abgeschnitten — genau so ist es gewollt,
-   sie sind Umgebung, kein Inhalt. */
-let minLon = 180
-let maxLon = -180
-let minLat = 90
-let maxLat = -90
-for (const land of kern) {
-  for (const flaeche of flaechen(land)) {
-    for (const ring of flaeche) {
-      for (const [lon, lat] of ringPunkte(ring)) {
-        if (lon < minLon) minLon = lon
-        if (lon > maxLon) maxLon = lon
-        if (lat < minLat) minLat = lat
-        if (lat > maxLat) maxLat = lat
-      }
-    }
-  }
-}
-
-const RAND = 0.35 // Grad Luft rundherum
-minLon -= RAND
-maxLon += RAND
-minLat -= RAND
-maxLat += RAND
-
-const BREITE = 1000
+const { minLon, maxLon, minLat, maxLat } = AUSSCHNITT
 const skalaX = BREITE / (maxLon - minLon)
 const yOben = mercY(maxLat)
-const yUnten = mercY(minLat)
 const skalaY = skalaX * (180 / Math.PI)
-const HOEHE = Math.round((yOben - yUnten) * skalaY)
+const HOEHE = Math.round((yOben - mercY(minLat)) * skalaY)
 
 const x = (lon) => (lon - minLon) * skalaX
 const y = (lat) => (yOben - mercY(lat)) * skalaY
@@ -130,20 +182,16 @@ const pfad = (land, mindestabstand) => {
   const teile = []
   for (const flaeche of flaechen(land)) {
     for (const ring of flaeche) {
-      const punkte = ringPunkte(ring)
-      if (punkte.length < 3) continue
+      const roh = rechteckBeschneiden(entwirren(ringPunkte(ring)), AUSSCHNITT)
+      if (roh.length < 3) continue
       // Winzige Inseln weglassen: sie kosten Bytes und sind bei dieser Größe
       // ohnehin nur ein Pixelfleck.
-      const lons = punkte.map((p) => p[0])
-      const lats = punkte.map((p) => p[1])
+      const lons = roh.map((p) => p[0])
+      const lats = roh.map((p) => p[1])
       if (Math.max(...lons) - Math.min(...lons) < 0.12 && Math.max(...lats) - Math.min(...lats) < 0.12) continue
-      const duenn = ausduennen(punkte, mindestabstand)
+      const duenn = ausduennen(roh, mindestabstand)
       if (duenn.length < 3) continue
-      teile.push(
-        'M' +
-          duenn.map(([lon, lat]) => `${x(lon).toFixed(1)} ${y(lat).toFixed(1)}`).join('L') +
-          'Z',
-      )
+      teile.push('M' + duenn.map(([lon, lat]) => `${x(lon).toFixed(1)} ${y(lat).toFixed(1)}`).join('L') + 'Z')
     }
   }
   return teile.join('')
@@ -154,18 +202,21 @@ const ergebnis = {
     'Erzeugt mit scripts/build-karte.mjs aus Natural Earth (world-atlas, gemeinfrei). Nicht von Hand ändern.',
   breite: BREITE,
   hoehe: HOEHE,
-  ausschnitt: { minLon, maxLon, minLat, maxLat },
-  lieferlaender: {},
-  nachbarn: {},
+  ausschnitt: AUSSCHNITT,
+  kernlaender: {},
+  umgebung: {},
 }
 
-for (const land of gewaehlt) {
-  // Die Lieferländer tragen die Karte und bekommen mehr Stützpunkte; die
-  // Nachbarn sind nur Umgebung und dürfen gröber sein.
-  const kernland = LIEFERLAENDER.includes(String(land.id))
-  const d = pfad(land, kernland ? 1.1 : 2.2)
+const laender = topo.objects.countries.geometries
+for (const land of laender) {
+  const id = String(land.id)
+  // Die Kernländer tragen die Karte und bekommen mehr Stützpunkte; die
+  // Umgebung ist nur Zusammenhang und darf gröber sein.
+  const kern = KERN.includes(id)
+  if (!kern && !UMGEBUNG.includes(id)) continue
+  const d = pfad(land, kern ? 1.1 : 2.2)
   if (!d) continue
-  const ziel = kernland ? ergebnis.lieferlaender : ergebnis.nachbarn
+  const ziel = kern ? ergebnis.kernlaender : ergebnis.umgebung
   ziel[land.properties.name] = d
 }
 
@@ -175,5 +226,5 @@ fs.writeFileSync(ziel, JSON.stringify(ergebnis))
 
 const groesse = (fs.statSync(ziel).size / 1024).toFixed(1)
 console.log(`${ziel} geschrieben: ${BREITE} x ${HOEHE}, ${groesse} KB`)
-console.log('Lieferländer:', Object.keys(ergebnis.lieferlaender).join(', '))
-console.log('Nachbarn:', Object.keys(ergebnis.nachbarn).join(', '))
+console.log('Kernländer:', Object.keys(ergebnis.kernlaender).join(', '))
+console.log('Umgebung:  ', Object.keys(ergebnis.umgebung).join(', '))
