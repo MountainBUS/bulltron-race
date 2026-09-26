@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IconArrow, IconCheck, IconMail, IconPhone, IconPin } from './Icons'
 import { HaendlerKarte } from './HaendlerKarte'
+import { landName } from '../lib/laender'
 import {
   codeSuchen,
   entfernung,
@@ -39,6 +40,7 @@ const STATUS_LABEL: Record<string, string> = {
   haendler: 'Händler',
   einbaupartner: 'Einbaupartner',
 }
+
 
 const SERVICE_LABEL: Record<string, string> = {
   beratung: 'Beratung',
@@ -316,7 +318,8 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
 
         <div className="dealer-liste">
           {ergebnis.map((h) => {
-            const anschrift = [h.street, [h.postalCode, h.city].filter(Boolean).join(' ')]
+            const land = landName(h.country)
+            const anschrift = [h.street, [h.postalCode, h.city].filter(Boolean).join(' '), land]
               .filter(Boolean)
               .join(', ')
             const route = anschrift
@@ -360,6 +363,12 @@ export const HaendlerSuche = ({ haendler }: { haendler: Haendler[] }) => {
                         {h.street}
                         {h.street ? <br /> : null}
                         {h.postalCode} {h.city}
+                        {land ? (
+                          <>
+                            <br />
+                            {land}
+                          </>
+                        ) : null}
                       </span>
                     </p>
                   ) : null}

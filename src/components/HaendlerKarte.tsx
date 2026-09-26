@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { imAusschnitt, projizieren, type Kartendaten } from '../lib/karte'
+import { landName } from '../lib/laender'
 
 /**
  * Standortkarte der Händler.
@@ -42,6 +43,7 @@ export type Kartenpunkt = {
   street?: string | null
   postalCode?: string | null
   city?: string | null
+  country?: string | null
   status?: string[]
   statusFreitext?: string | null
   website?: string | null
@@ -129,6 +131,33 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
 
   if (fehler) return null
   if (!karte) return <div className="haendler-karte haendler-karte--laedt" aria-hidden="true" />
+
+  /* Zwei verschiedene Gründe, warum ein Partner fehlen kann, und sie dürfen
+     nicht verwechselt werden: Ohne Koordinaten weiß die Karte nicht wohin —
+     außerhalb des Ausschnitts weiß sie es sehr wohl, zeigt aber nur
+     Deutschland, Österreich und die Schweiz. Ein Händler in Schweden ist nicht
+     „ohne Koordinaten". */
+  const ohneKoordinaten = haendler.filter(
+    (h) => typeof h.lat !== 'number' || typeof h.lng !== 'number',
+  ).length
+  const ausserhalb = haendler.length - punkte.length - ohneKoordinaten
+
+  const gruende: string[] = []
+  if (ohneKoordinaten > 0)
+    gruende.push(
+      ohneKoordinaten === 1 ? 'bei einem fehlen die Koordinaten' : `bei ${ohneKoordinaten} fehlen die Koordinaten`,
+    )
+  if (ausserhalb > 0)
+    gruende.push(
+      ausserhalb === 1
+        ? 'einer liegt außerhalb des Ausschnitts'
+        : `${ausserhalb} liegen außerhalb des Ausschnitts`,
+    )
+
+  const bildunterschrift =
+    punkte.length === haendler.length
+      ? `${punkte.length} ${punkte.length === 1 ? 'Partner' : 'Partner'} auf der Karte`
+      : `${punkte.length} von ${haendler.length} Partnern auf der Karte — ${gruende.join(', ')}`
 
   /* Oben am Rand klappt die Karte nach unten, sonst stünde sie außerhalb des
      Bildes. Links und rechts am Rand rückt sie an die jeweilige Kante. */
@@ -277,6 +306,12 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
                   </>
                 ) : null}
                 {[offen.postalCode, offen.city].filter(Boolean).join(' ')}
+                {landName(offen.country) ? (
+                  <>
+                    <br />
+                    {landName(offen.country)}
+                  </>
+                ) : null}
               </p>
             ) : null}
 
@@ -310,11 +345,7 @@ export const HaendlerKarte = ({ haendler, standort, onAuswahl }: Props) => {
         ) : null}
       </div>
 
-      <figcaption>
-        {punkte.length === haendler.length
-          ? `${punkte.length} ${punkte.length === 1 ? 'Partner' : 'Partner'} auf der Karte`
-          : `${punkte.length} von ${haendler.length} Partnern auf der Karte — bei den übrigen fehlen die Koordinaten`}
-      </figcaption>
+      <figcaption>{bildunterschrift}</figcaption>
     </figure>
   )
 }

@@ -108,6 +108,13 @@ export const Dealers: CollectionConfig = {
                     { label: 'Deutschland', value: 'DE' },
                     { label: 'Österreich', value: 'AT' },
                     { label: 'Schweiz', value: 'CH' },
+                    /* Für Partner außerhalb des deutschsprachigen Raums. Die
+                       Postleitzahlentabelle kennt diese Länder nicht, solche
+                       Einträge bleiben deshalb ohne Koordinaten: Sie stehen in
+                       der Liste, nicht auf der Karte und nicht in der
+                       Umkreissuche. Das Land erscheint dafür in der
+                       Anschrift. */
+                    { label: 'Schweden', value: 'SE' },
                   ],
                   admin: { width: '25%' },
                 },
