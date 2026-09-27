@@ -137,7 +137,7 @@ export const seed = async () => {
         {
           question: 'Wie lange hält die Batterie?',
           answer:
-            'Gegenüber einer Blei-Säure-Batterie erreichen unsere Zellen bis zur zehnfachen Lebensdauer. Wir geben fünf Jahre deutsche Herstellergarantie.',
+            'Gegenüber einer Blei-Säure-Batterie erreichen unsere Zellen bis zur zehnfachen Lebensdauer.',
         },
       ],
     },
@@ -187,7 +187,7 @@ export const seed = async () => {
       highlights: [
         { title: 'Ab 500 Gramm', text: 'Die 4 Ah wiegt 0,5 kg, die 12 Ah 1,3 kg — ein Bruchteil einer Bleibatterie.' },
         { title: 'Startet auch im Winter', text: 'Laden bis −20 °C, entladen bis −30 °C. Nach der Standzeit trotzdem startbereit.' },
-        { title: 'Fünf Jahre Garantie', text: 'Deutsche Herstellergarantie auf jede Batterie der Baureihe.' },
+        { title: 'Kein Spezialladegerät nötig', text: 'Zum Laden ist kein besonderes Ladegerät erforderlich.' },
       ],
       body: doc([
         h('h2', 'Die richtige Größe finden'),
@@ -377,7 +377,7 @@ export const seed = async () => {
       logo: logoKopf.id,
       footerLogo: logoFooter.id,
       defaultSeoDescription:
-        'Lithium-Starterbatterien für Motorsport, Rennsport und Motorrad. Entwickelt und konfektioniert in Lüneburg — leicht, stark, mit fünf Jahren deutscher Herstellergarantie.',
+        'Lithium-Starterbatterien für Motorsport, Rennsport und Motorrad. Entwickelt und konfektioniert in Lüneburg — leicht und stark.',
       mainNav: [
         { label: 'Alle Batterien', url: '/produkte' },
         { label: 'Motorsport', url: '/motorsportbatterien' },
@@ -388,7 +388,7 @@ export const seed = async () => {
       ],
       headerCtaLabel: 'Beratung',
       headerCtaUrl: 'tel:+4936134948420',
-      announcement: 'Made in Germany · 5 Jahre Herstellergarantie · Beratung unter +49 361 34948420',
+      announcement: 'Made in Germany · Beratung unter +49 361 34948420',
       companyName: 'ProVerDa GmbH',
       street: 'An der Lache 40-42',
       postalCode: '99086',
@@ -469,7 +469,6 @@ export const seed = async () => {
       image: productImages['race-55ah-l1.webp'],
       stats: [
         { value: '10.000+', label: 'zufriedene Kunden' },
-        { value: '5 Jahre', label: 'Herstellergarantie' },
         { value: '−30 °C', label: 'Entladetemperatur' },
         { value: '1400 A', label: 'max. Kaltstartstrom' },
       ],
@@ -491,7 +490,6 @@ export const seed = async () => {
           { text: 'Bis zu 10-fache Lebensdauer gegenüber Blei-Säure' },
           { text: 'Bis 75 % höhere Zyklenlebensdauer als andere LiFePO4-Batterien' },
           { text: 'Bis 45 % kleiner und bis 35 % leichter als andere LiFePO4-Batterien' },
-          { text: '5 Jahre deutsche Herstellergarantie' },
         ],
         ctaLabel: 'Technik im Detail',
         ctaUrl: '/produkte',
@@ -544,7 +542,7 @@ export const seed = async () => {
         { icon: 'weight', title: 'Bis 35 % leichter', text: 'Und bis 45 % kleiner als andere LiFePO4-Batterien.' },
         { icon: 'temp', title: '−20 °C bis +60 °C', text: 'Laden bis −20 °C, entladen bis −30 °C. Auch nach der Winterpause startbereit.' },
         { icon: 'cycle', title: '10-fache Lebensdauer', text: 'Bleibatterie-Ersatz mit bis zu 10-facher Lebensdauer.' },
-        { icon: 'shield', title: '5 Jahre Garantie', text: 'Deutsche Herstellergarantie auf jede Batterie der Baureihe.' },
+        { icon: 'plug', title: 'Kein Spezialladegerät nötig', text: 'Zum Laden ist kein besonderes Ladegerät erforderlich.' },
         { icon: 'factory', title: 'Made in Germany', text: 'Entwickelt und konfektioniert in Lüneburg.' },
         { icon: 'truck', title: 'Schnelle Lieferung', text: 'Versand über zugelassene Dienstleister in geprüfter Verpackung.' },
         { icon: 'support', title: 'Direkte Beratung', text: 'Fragen zu Startstrom und Einbaumaß klären wir am Telefon.' },
@@ -563,7 +561,7 @@ export const seed = async () => {
       seo: {
         title: 'BULLTRON RACE — Lithium-Starterbatterien aus Deutschland',
         description:
-          'Lithium-Starterbatterien für Motorsport, Rennsport und Motorrad. Bis 1400 A Kaltstartstrom, bis 35 % leichter, 5 Jahre deutsche Herstellergarantie. Made in Germany.',
+          'Lithium-Starterbatterien für Motorsport, Rennsport und Motorrad. Bis 1400 A Kaltstartstrom, bis 35 % leichter. Made in Germany.',
       },
     },
   })

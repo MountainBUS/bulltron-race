@@ -12,7 +12,7 @@ import { ProductGallery } from '../../../../components/ProductGallery'
 import { ProductCard } from '../../../../components/ProductCard'
 import { RichText } from '../../../../components/RichText'
 import { YouTubeEmbed } from '../../../../components/YouTubeEmbed'
-import { IconCheck, IconDownload, IconLock, IconPhone, IconShield, IconTruck } from '../../../../components/Icons'
+import { IconCheck, IconDownload, IconLock, IconPhone, IconTruck } from '../../../../components/Icons'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -175,9 +175,6 @@ export default async function ProductPage({ params }: Props) {
             <div className="trust-row">
               <div className="trust-item">
                 <IconTruck size={20} /> Versand aus Deutschland
-              </div>
-              <div className="trust-item">
-                <IconShield size={20} /> 5 Jahre Herstellergarantie
               </div>
               <div className="trust-item">
                 {shopEnabled ? (

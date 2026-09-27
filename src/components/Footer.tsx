@@ -112,7 +112,6 @@ export const Footer = ({ siteName, logoUrl, tagline, about, columns, contact, co
         ) : (
           <div className="footer__pay">
             <span className="pay-chip">Made in Germany</span>
-            <span className="pay-chip">5 Jahre Garantie</span>
           </div>
         )}
       </div>

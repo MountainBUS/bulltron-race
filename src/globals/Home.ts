@@ -212,6 +212,7 @@ export const Home: GlobalConfig = {
                     { label: 'Headset', value: 'support' },
                     { label: 'Fabrik', value: 'factory' },
                     { label: 'Kreislauf', value: 'cycle' },
+                    { label: 'Stecker', value: 'plug' },
                   ],
                 },
                 { name: 'title', type: 'text', label: 'Titel', required: true },

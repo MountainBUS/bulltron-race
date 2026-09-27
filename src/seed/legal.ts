@@ -203,15 +203,15 @@ export const agb = doc([
     'Sie müssen für einen etwaigen Wertverlust der Waren nur aufkommen, wenn dieser Wertverlust auf einen zur Prüfung der Beschaffenheit, Eigenschaften und Funktionsweise der Waren nicht notwendigen Umgang mit ihnen zurückzuführen ist.',
   ),
 
-  h('h2', '§ 8 Gewährleistung und Garantie'),
+  /* Absatz (2) und (3) nannten eine Herstellergarantie von fünf Jahren und die
+     davon ausgenommenen Schäden. Beides ist am 27.09.2026 auf Marcos
+     Entscheidung entfallen, weil die Garantie vorerst nicht mehr beworben
+     wird — eine Zusage, die nirgends mehr auftaucht, gehört auch nicht in die
+     AGB. Der gesetzliche Teil bleibt unberührt, deshalb heißt der Abschnitt
+     jetzt nur noch „Gewährleistung". */
+  h('h2', '§ 8 Gewährleistung'),
   p(
-    '(1) Es gilt das gesetzliche Mängelhaftungsrecht. Gegenüber Verbrauchern beträgt die Verjährungsfrist für Mängelansprüche zwei Jahre ab Ablieferung der Ware.',
-  ),
-  p(
-    '(2) Unabhängig davon gewährt die BULLTRON GmbH als Herstellerin auf die hier angebotenen Batterien eine Herstellergarantie von fünf Jahren nach Maßgabe der jeweiligen Garantiebedingungen. Die gesetzlichen Rechte werden dadurch nicht eingeschränkt.',
-  ),
-  p(
-    '(3) Von der Garantie ausgenommen sind Schäden durch unsachgemäßen Einbau, mechanische Beschädigung, Tiefentladung infolge längerer Lagerung ohne Ladung sowie durch Verwendung ungeeigneter Ladegeräte.',
+    'Es gilt das gesetzliche Mängelhaftungsrecht. Gegenüber Verbrauchern beträgt die Verjährungsfrist für Mängelansprüche zwei Jahre ab Ablieferung der Ware.',
   ),
 
   h('h2', '§ 9 Rücknahme von Altbatterien'),

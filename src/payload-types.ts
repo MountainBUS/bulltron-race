@@ -414,9 +414,9 @@ export interface Dealer {
   street?: string | null;
   postalCode?: string | null;
   city?: string | null;
-  country?: ('DE' | 'AT' | 'CH') | null;
+  country?: ('DE' | 'AT' | 'CH' | 'SE') | null;
   /**
-   * Werden beim Speichern aus der Postleitzahl ermittelt — für Deutschland, Österreich und die Schweiz. Für eine genauere Position hier von Hand eintragen und den Haken darunter setzen, dann bleiben die Werte unangetastet.
+   * Werden beim Speichern aus der Postleitzahl ermittelt — für Deutschland, Österreich, die Schweiz und Schweden. Für eine genauere Position hier von Hand eintragen und den Haken darunter setzen, dann bleiben die Werte unangetastet.
    */
   coordinates?: {
     lat?: number | null;
@@ -528,6 +528,10 @@ export interface Team {
    */
   vehicles?:
     | {
+        /**
+         * Wer fährt dieses Fahrzeug? Nur nötig, wenn das Team mehrere Fahrer hat — sonst bleibt das Feld leer und erscheint auch nicht auf der Seite.
+         */
+        driver?: string | null;
         manufacturer?: string | null;
         model?: string | null;
         year?: string | null;
@@ -991,6 +995,7 @@ export interface TeamsSelect<T extends boolean = true> {
   vehicles?:
     | T
     | {
+        driver?: T;
         manufacturer?: T;
         model?: T;
         year?: T;
@@ -1333,7 +1338,7 @@ export interface Home {
   uspHeadline?: string | null;
   usps?:
     | {
-        icon?: ('bolt' | 'shield' | 'weight' | 'temp' | 'truck' | 'support' | 'factory' | 'cycle') | null;
+        icon?: ('bolt' | 'shield' | 'weight' | 'temp' | 'truck' | 'support' | 'factory' | 'cycle' | 'plug') | null;
         title: string;
         text?: string | null;
         id?: string | null;

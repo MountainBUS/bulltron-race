@@ -39,10 +39,6 @@ export default async function ProductsPage() {
                   <div className="stat__value">{products.length}</div>
                   <div className="stat__label">Modelle verfügbar</div>
                 </div>
-                <div className="stat" style={{ borderRight: 0 }}>
-                  <div className="stat__value">5 Jahre</div>
-                  <div className="stat__label">Herstellergarantie</div>
-                </div>
               </div>
             </div>
           </div>

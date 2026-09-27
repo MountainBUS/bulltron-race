@@ -38,7 +38,6 @@ export type SeedProduct = {
  */
 const belegteAussagen = [
   'Effizientes Laden bis −20 °C, Entladen bis −30 °C',
-  '5 Jahre deutsche Herstellergarantie',
   'Bis 75 % höhere Zyklenlebensdauer als andere LiFePO4-Batterien',
   'Bis 45 % kleiner und bis 35 % leichter als andere LiFePO4-Batterien',
   'Bleibatterie-Ersatz mit bis zu 10-facher Lebensdauer',
@@ -62,7 +61,6 @@ const gemeinsameDaten = (balancer: string): [string, string][] => [
   ['Aktiver Balancer', balancer],
   ['Ladetemperatur', 'bis −20 °C'],
   ['Entladetemperatur', 'bis −30 °C'],
-  ['Garantie', '5 Jahre deutsche Herstellergarantie'],
   ['Herkunft', 'Entwickelt und konfektioniert in Lüneburg'],
 ]
 

@@ -73,8 +73,15 @@ export const IconCycle = ({ size = 34, className }: P) => (
   <svg {...base(size)} className={className}><path d="M3 12a9 9 0 0 1 15.5-6.2M21 12a9 9 0 0 1-15.5 6.2" /><path d="M18 2v4h-4M6 22v-4h4" /></svg>
 )
 
+/* Netzstecker: für den Hinweis, dass kein besonderes Ladegerät nötig ist.
+   Bewusst dieselbe Strichstärke und dasselbe 24er-Raster wie die übrigen. */
+export const IconPlug = ({ size = 34, className }: P) => (
+  <svg {...base(size)} className={className}><path d="M9 2v6M15 2v6" /><path d="M6 8h12v3a6 6 0 0 1-12 0V8Z" /><path d="M12 17v5" /></svg>
+)
+
 export const uspIcons: Record<string, React.FC<P>> = {
   bolt: IconBolt,
+  plug: IconPlug,
   shield: IconShield,
   weight: IconWeight,
   temp: IconTemp,
