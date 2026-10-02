@@ -24,6 +24,12 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     user: Users.slug,
+    /* Das Backend ist immer dunkel. Ohne diese Zeile gilt die Payload-Voreinstellung
+       'all': dann sucht die Oberfläche ein Cookie `payload-theme` und fällt, wenn
+       keins da ist, auf die Betriebssystem-Einstellung des jeweiligen Rechners
+       zurück — das Backend sah deshalb je nach Gerät hell oder dunkel aus.
+       Mit 'dark' entfällt auch die Auswahl Automatisch/Hell/Dunkel im Benutzerkonto. */
+    theme: 'dark',
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
       titleSuffix: ' · Bulltron Race',
