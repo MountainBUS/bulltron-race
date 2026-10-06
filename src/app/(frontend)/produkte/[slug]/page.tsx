@@ -6,6 +6,7 @@ import { getProductBySlug, getProducts, getSiteSettings } from '../../../../lib/
 import { mediaAlt, mediaUrl } from '../../../../lib/media'
 import { availabilityLabel, formatPrice } from '../../../../lib/format'
 import { getYouTubeId } from '../../../../lib/youtube'
+import { hauptKategorie } from '../../../../lib/kategorien'
 import { AddToCart } from '../../../../components/AddToCart'
 import { shopEnabled, ANFRAGE_TEL, ANFRAGE_MAIL } from '../../../../lib/shop'
 import { ProductGallery } from '../../../../components/ProductGallery'
@@ -43,7 +44,9 @@ export default async function ProductPage({ params }: Props) {
   if (!product) notFound()
 
   const settings = await getSiteSettings()
-  const category = typeof product.category === 'object' ? product.category : null
+  /* Die oberste Kategorie fuehrt: Brotkrumen, Ruecksprung und die weiteren
+     Modelle beziehen sich auf sie. */
+  const category = hauptKategorie(product)
   const availability = availabilityLabel[product.availability ?? 'in_stock'] ?? availabilityLabel.in_stock
 
   const images = [

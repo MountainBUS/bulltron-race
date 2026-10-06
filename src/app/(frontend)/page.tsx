@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getCategories, getHome, getProducts } from '../../lib/payload'
 import { mediaAlt, mediaUrl } from '../../lib/media'
 import { getYouTubeId } from '../../lib/youtube'
+import { inKategorie } from '../../lib/kategorien'
 import { ProductCard } from '../../components/ProductCard'
 import { RichText } from '../../components/RichText'
 import { YouTubeEmbed } from '../../components/YouTubeEmbed'
@@ -68,8 +69,11 @@ export default async function HomePage() {
           .filter(Boolean)
       : categories.map((category) => ({ category, text: null, image: null }))
 
+  /* Eine Batterie darf in mehreren Kategorien stehen und zaehlt dann auch bei
+     jeder mit — die Zahl auf der Karte soll zu dem passen, was die
+     Kategorieseite tatsaechlich zeigt. */
   const countFor = (categoryId: number | string) =>
-    allProducts.filter((product) => (typeof product.category === 'object' ? product.category?.id : product.category) === categoryId).length
+    allProducts.filter((product) => inKategorie(product, categoryId)).length
 
   return (
     <>

@@ -154,9 +154,9 @@ export interface Product {
   slug: string;
   status: 'published' | 'draft';
   /**
-   * Bestimmt, auf welcher Kategorieseite die Batterie erscheint und unter welchem Menüpunkt sie zu finden ist. Jede Batterie gehört zu genau einer Kategorie.
+   * Bestimmt, auf welchen Kategorieseiten die Batterie erscheint. Mehrere sind möglich. Die oberste gilt als Hauptkategorie: Sie steht in der Brotkrumen-Navigation und über den weiteren Modellen auf der Produktseite. Die Reihenfolge lässt sich durch Ziehen ändern.
    */
-  category: number | Category;
+  category: (number | Category)[];
   sortOrder?: number | null;
   featured?: boolean | null;
   /**
