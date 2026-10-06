@@ -17,7 +17,12 @@ import React from 'react'
  */
 export const Logo = () => (
   <>
-    <style>{`
+    {/* `display: none` ausdrücklich gesetzt: In der Kopfzeile des Backends gibt
+        Payload den Kindern ihres Platzes `display: block`, womit der Browser
+        auch ein <style> als Text darstellt — genau daher kam das rätselhafte
+        „.bt" neben der Brotkrumen-Navigation. Auf der Anmeldeseite tritt das
+        nicht auf, aber die Zeile kostet nichts und schließt es für immer aus. */}
+    <style style={{ display: 'none' }}>{`
       .bt-logo { width: min(20rem, 70vw); height: auto; display: block; margin: 0 auto; }
       .bt-logo--hell { display: none; }
       [data-theme='light'] .bt-logo--dunkel { display: none; }

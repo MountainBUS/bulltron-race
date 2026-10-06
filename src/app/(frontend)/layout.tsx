@@ -31,6 +31,24 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: settings.siteName ?? 'BULLTRON RACE',
       images: mediaUrl(settings.defaultSeoImage, 'hero') ?? undefined,
     },
+    /* Favicon. Die Dateien liegen unter public/ und stammen alle aus
+       public/marke.svg — derselben Bildmarke, die Kopf und Fuß der Seite
+       tragen (LogoMark in components/Icons.tsx) und die auch das Backend in
+       der Kopfzeile zeigt. Gefüllt statt umrissen, weil die Kontur bei 16
+       Pixeln verschwindet; der Blitz ist ausgespart, damit die Marke auf
+       hellen wie auf dunklen Browserleisten sitzt.
+
+       apple-touch-icon.png ist die Ausnahme mit eigenem Hintergrund: Apple
+       ersetzt Transparenz durch Schwarz, deshalb dort die dunkle Hausfarbe
+       und Luft am Rand. */
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+        { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+        { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    },
     robots: { index: true, follow: true },
   }
 }
