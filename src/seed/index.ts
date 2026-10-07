@@ -498,10 +498,12 @@ export const seed = async () => {
       },
       categoriesHeadline: 'Für jede Disziplin die passende Batterie',
       categoriesSubline:
-        'Drei Baureihen, ein Anspruch: maximale Startleistung bei minimalem Gewicht. Wähle die Kategorie, die zu deinem Fahrzeug passt.',
+        'Zwei Baureihen, ein Anspruch: maximale Startleistung bei minimalem Gewicht. Wähle die Kategorie, die zu deinem Fahrzeug passt.',
+      /* Die Rennsportbatterien stehen bewusst nicht auf der Startseite: Die
+         Kategorie ist leer, die 55 Ah laeuft unter Motorsport. Entschieden von
+         Marco am 07.10.2026. Die Kategorieseite selbst bleibt bestehen. */
       categoryCards: [
         { category: categoryIds.motorsportbatterien },
-        { category: categoryIds.rennsportbatterien },
         { category: categoryIds.motorradbatterien },
       ],
       productsHeadline: 'Aus dem Programm',

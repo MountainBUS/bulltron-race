@@ -75,6 +75,12 @@ export default async function HomePage() {
   const countFor = (categoryId: number | string) =>
     allProducts.filter((product) => inKategorie(product, categoryId)).length
 
+  /* Die Spaltenzahl richtet sich nach der Anzahl der Kacheln. `grid--3` legt
+     mit `auto-fill` immer drei Spuren an — bei nur zwei Kacheln bliebe die
+     dritte leer und die Kacheln stuenden schmal am linken Rand. `grid--2`
+     teilt dagegen die volle Breite unter den vorhandenen Kacheln auf. */
+  const kachelRaster = categoryCards.length >= 3 ? 'grid--3' : 'grid--2'
+
   return (
     <>
       {/* ---------- Hero ---------- */}
@@ -153,7 +159,7 @@ export default async function HomePage() {
               {home.categoriesSubline ? <p className="lead" style={{ marginTop: '1rem' }}>{home.categoriesSubline}</p> : null}
             </div>
 
-            <div className="grid grid--3">
+            <div className={`grid ${kachelRaster}`}>
               {categoryCards.map((card: any) => {
                 const image = mediaUrl(card.image, 'card') || mediaUrl(card.category.image, 'card')
                 const count = countFor(card.category.id)
