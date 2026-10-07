@@ -7,6 +7,7 @@ import { mediaAlt, mediaUrl } from '../../../../lib/media'
 import { availabilityLabel, formatPrice } from '../../../../lib/format'
 import { getYouTubeId } from '../../../../lib/youtube'
 import { hauptKategorie } from '../../../../lib/kategorien'
+import { abmessung, bauformName, bauformen } from '../../../../lib/varianten'
 import { AddToCart } from '../../../../components/AddToCart'
 import { shopEnabled, ANFRAGE_TEL, ANFRAGE_MAIL } from '../../../../lib/shop'
 import { ProductGallery } from '../../../../components/ProductGallery'
@@ -57,6 +58,11 @@ export default async function ProductPage({ params }: Props) {
   ].filter(Boolean) as { url: string; alt: string }[]
 
   const videoId = getYouTubeId(product.video?.url)
+
+  /* Bauformen derselben Baureihe. Gruppiert wird in Code statt per Abfrage,
+     siehe lib/varianten.ts. Hat die Batterie keine Geschwister, bleibt die
+     Liste leer und der Abschnitt entfällt. */
+  const varianten = bauformen(product, await getProducts())
 
   const related = (await getProducts(category?.id))
     .filter((entry) => entry.id !== product.id)
@@ -120,6 +126,43 @@ export default async function ProductPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
+            ) : null}
+
+            {varianten.length > 0 ? (
+              <div className="bauform">
+                <span className="bauform__titel">Bauform</span>
+                <div className="bauform__reihe">
+                  {varianten.map((v) => {
+                    const aktiv = v.id === product.id
+                    const masse = abmessung(v)
+                    /* Der Preis steht nur dran, wenn er abweicht. Bei der 27 Ah
+                       kostet das Metallgehaeuse 100 Euro mehr als die drei
+                       L-Gehaeuse — das gehoert an die Schaltflaeche, bevor man
+                       klickt. Bei der 55 Ah sind beide gleich teuer, dann waere
+                       die Angabe nur Rauschen. */
+                    const anderePreis = !aktiv && v.price !== product.price
+                    const inhalt = (
+                      <>
+                        <span className="bauform__name">{bauformName(v)}</span>
+                        {masse ? <span className="bauform__masse">{masse}</span> : null}
+                        {anderePreis ? <span className="bauform__preis">{formatPrice(v.price)}</span> : null}
+                      </>
+                    )
+                    return aktiv ? (
+                      <span key={v.id} className="bauform__wahl bauform__wahl--aktiv" aria-current="true">
+                        {inhalt}
+                      </span>
+                    ) : (
+                      <Link key={v.id} href={`/produkte/${v.slug}`} className="bauform__wahl">
+                        {inhalt}
+                      </Link>
+                    )
+                  })}
+                </div>
+                <p className="bauform__hinweis">
+                  Gleiche Kapazität und gleicher Kaltstartstrom — die Bauformen unterscheiden sich nur im Gehäuse.
+                </p>
+              </div>
             ) : null}
 
             <div className="pdp__price-box">

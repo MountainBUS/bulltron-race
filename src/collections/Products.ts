@@ -8,7 +8,7 @@ export const Products: CollectionConfig = {
   labels: { singular: 'Produkt', plural: 'Produkte' },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category', 'price', 'status'],
+    defaultColumns: ['title', 'category', 'variantGroup', 'variantLabel', 'price', 'status'],
     group: 'Shop',
     description: 'Alle Batterien. Jedes Produkt erzeugt automatisch eine Detailseite.',
   },
@@ -40,6 +40,48 @@ export const Products: CollectionConfig = {
         position: 'sidebar',
         description:
           'Bestimmt, auf welchen Kategorieseiten die Batterie erscheint. Mehrere sind möglich. Die oberste gilt als Hauptkategorie: Sie steht in der Brotkrumen-Navigation und über den weiteren Modellen auf der Produktseite. Die Reihenfolge lässt sich durch Ziehen ändern.',
+      },
+    },
+    /* --- Bauform-Varianten ---------------------------------------------------
+       Mehrere Batterien können elektrisch identisch sein und sich nur im
+       Gehäuse unterscheiden — die 55 Ah gibt es als L1 und L2, die 27 Ah als
+       Metall, L1, L2 und L3. Jede bleibt ein eigenes Produkt mit eigener Seite,
+       eigener Artikelnummer und eigenem Warenkorbeintrag; die Produktseite
+       zeigt zusätzlich eine Auswahl zu den Geschwistern.
+
+       Verknüpft wird über ein Textfeld, so von Marco am 07.10.2026 entschieden
+       (die Alternative wäre ein eigener Menüpunkt „Baureihen" gewesen). Groß-
+       und Kleinschreibung sowie Leerzeichen fängt der Vergleich ab; ein echter
+       Tippfehler trennt die Gruppe aber still, deshalb steht die Baureihe als
+       Spalte in der Produktliste, wo sie beim Durchsehen auffällt. */
+    {
+      name: 'variantGroup',
+      type: 'text',
+      label: 'Baureihe',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Alle Batterien mit demselben Eintrag gehören zusammen und erscheinen auf der Produktseite als Auswahl der Bauform. Beispiel: „Race 55 Ah" bei der L1 und der L2. Leer lassen, wenn es die Batterie nur in einer Bauform gibt.',
+      },
+      hooks: {
+        beforeValidate: [
+          ({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value),
+        ],
+      },
+    },
+    {
+      name: 'variantLabel',
+      type: 'text',
+      label: 'Bauform',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Die Beschriftung der Schaltfläche in der Auswahl, kurz halten: „L1", „L2", „L3", „Metall". Nur nötig, wenn eine Baureihe eingetragen ist.',
+      },
+      hooks: {
+        beforeValidate: [
+          ({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value),
+        ],
       },
     },
     {

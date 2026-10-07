@@ -252,6 +252,8 @@ export const seed = async () => {
         slug: product.slug,
         status: 'published',
         category: [categoryIds[product.categorySlug]],
+        variantGroup: product.variantGroup,
+        variantLabel: product.variantLabel,
         sortOrder: order,
         featured: Boolean(product.featured),
         subtitle: product.subtitle,

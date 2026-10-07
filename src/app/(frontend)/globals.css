@@ -911,6 +911,50 @@ p:last-child { margin-bottom: 0; }
   font-size: 0.95rem;
   margin-bottom: 1.3rem;
 }
+/* --- Bauform-Auswahl auf der Produktseite ---------------------------------
+   Mehrere Batterien sind elektrisch gleich und unterscheiden sich nur im
+   Gehäuse. Die Auswahl steht bewusst VOR dem Preis: Erst die passende Bauform,
+   dann der Preis dazu — bei der 27 Ah kostet die Metall-Variante 100 Euro mehr
+   als die drei L-Gehäuse.
+
+   Die gewählte Bauform ist ein <span>, kein Link. Sie führt auf die Seite, auf
+   der man ohnehin steht, und ein Link auf sich selbst ist für Tastatur und
+   Vorlesesoftware nur ein Stolperstein. */
+.bauform { margin-top: 1.75rem; }
+.bauform__titel {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 0.7rem;
+}
+.bauform__reihe { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.bauform__wahl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.95rem;
+  min-width: 5.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+a.bauform__wahl:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.bauform__wahl--aktiv {
+  border-color: var(--primary);
+  background: var(--surface-2);
+  cursor: default;
+}
+.bauform__name { font-weight: 700; font-size: 0.98rem; line-height: 1.2; }
+.bauform__masse { font-size: 0.74rem; color: var(--text-soft); line-height: 1.2; }
+.bauform__preis { font-size: 0.78rem; color: var(--primary); font-weight: 600; line-height: 1.2; margin-top: 0.1rem; }
+.bauform__hinweis { margin-top: 0.7rem; font-size: 0.82rem; color: var(--text-soft); }
+
 .pdp__price-box {
   padding: 1.5rem;
   background: var(--surface);

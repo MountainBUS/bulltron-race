@@ -10,6 +10,7 @@ import * as migration_20260914_150322_rennteams from './20260914_150322_rennteam
 import * as migration_20260918_130543_verkaeufer_hinweis from './20260918_130543_verkaeufer_hinweis';
 import * as migration_20260925_074500_fahrer_am_fahrzeug from './20260925_074500_fahrer_am_fahrzeug';
 import * as migration_20261006_121500_kategorien_mehrfach from './20261006_121500_kategorien_mehrfach';
+import * as migration_20261007_090000_bauform_varianten from './20261007_090000_bauform_varianten';
 
 export const migrations = [
   {
@@ -71,5 +72,10 @@ export const migrations = [
     up: migration_20261006_121500_kategorien_mehrfach.up,
     down: migration_20261006_121500_kategorien_mehrfach.down,
     name: '20261006_121500_kategorien_mehrfach'
+  },
+  {
+    up: migration_20261007_090000_bauform_varianten.up,
+    down: migration_20261007_090000_bauform_varianten.down,
+    name: '20261007_090000_bauform_varianten'
   },
 ];

@@ -18,6 +18,10 @@ export type SeedProduct = {
   title: string
   subtitle: string
   categorySlug: 'motorsportbatterien' | 'rennsportbatterien' | 'motorradbatterien'
+  /* Bauform-Varianten: gleiche Baureihe = gleiche Elektrik, anderes Gehäuse.
+     Leer bei Batterien, die es nur in einer Bauform gibt. */
+  variantGroup?: string
+  variantLabel?: string
   price: number
   sku: string
   ean: string
@@ -159,6 +163,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 27 Ah Metall',
     subtitle: '12,8 V LiFePO4 Starterbatterie im Metall-Gehäuse',
     categorySlug: 'motorsportbatterien',
+    variantGroup: 'Race 27 Ah',
+    variantLabel: 'Metall',
     price: 499,
     sku: 'LI27B700-12-RM',
     ean: '4262358250780',
@@ -190,6 +196,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 27 Ah L1',
     subtitle: '12,8 V LiFePO4 Starterbatterie im L1-Gehäuse',
     categorySlug: 'motorsportbatterien',
+    variantGroup: 'Race 27 Ah',
+    variantLabel: 'L1',
     price: 399,
     sku: 'LI27B700-12-RL1',
     ean: '4262358250759',
@@ -219,6 +227,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 27 Ah L2',
     subtitle: '12,8 V LiFePO4 Starterbatterie im L2-Gehäuse',
     categorySlug: 'motorsportbatterien',
+    variantGroup: 'Race 27 Ah',
+    variantLabel: 'L2',
     price: 399,
     sku: 'LI27B700-12-RL2',
     ean: '4262358250766',
@@ -248,6 +258,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 27 Ah L3',
     subtitle: '12,8 V LiFePO4 Starterbatterie im L3-Gehäuse',
     categorySlug: 'motorsportbatterien',
+    variantGroup: 'Race 27 Ah',
+    variantLabel: 'L3',
     price: 399,
     sku: 'LI27B700-12-RL3',
     ean: '4262358250773',
@@ -277,6 +289,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 55 Ah L1',
     subtitle: '12,8 V LiFePO4 Starterbatterie im L1-Gehäuse',
     categorySlug: 'rennsportbatterien',
+    variantGroup: 'Race 55 Ah',
+    variantLabel: 'L1',
     price: 599,
     sku: 'LI55B1400-12-RL1',
     ean: '4262358250742',
@@ -307,6 +321,8 @@ export const seedProducts: SeedProduct[] = [
     title: 'Race 55 Ah L2',
     subtitle: '12,8 V LiFePO4 Starterbatterie im L2-Gehäuse',
     categorySlug: 'rennsportbatterien',
+    variantGroup: 'Race 55 Ah',
+    variantLabel: 'L2',
     price: 599,
     sku: 'LI55B1400-12-RL2',
     ean: '4262358250735',

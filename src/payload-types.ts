@@ -157,6 +157,14 @@ export interface Product {
    * Bestimmt, auf welchen Kategorieseiten die Batterie erscheint. Mehrere sind möglich. Die oberste gilt als Hauptkategorie: Sie steht in der Brotkrumen-Navigation und über den weiteren Modellen auf der Produktseite. Die Reihenfolge lässt sich durch Ziehen ändern.
    */
   category: (number | Category)[];
+  /**
+   * Alle Batterien mit demselben Eintrag gehören zusammen und erscheinen auf der Produktseite als Auswahl der Bauform. Beispiel: „Race 55 Ah" bei der L1 und der L2. Leer lassen, wenn es die Batterie nur in einer Bauform gibt.
+   */
+  variantGroup?: string | null;
+  /**
+   * Die Beschriftung der Schaltfläche in der Auswahl, kurz halten: „L1", „L2", „L3", „Metall". Nur nötig, wenn eine Baureihe eingetragen ist.
+   */
+  variantLabel?: string | null;
   sortOrder?: number | null;
   featured?: boolean | null;
   /**
@@ -819,6 +827,8 @@ export interface ProductsSelect<T extends boolean = true> {
   slug?: T;
   status?: T;
   category?: T;
+  variantGroup?: T;
+  variantLabel?: T;
   sortOrder?: T;
   featured?: T;
   subtitle?: T;
