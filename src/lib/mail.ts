@@ -536,6 +536,11 @@ export const bestellungVersenden = async (
   payload: Payload,
   bestellung: Bestellung,
   einstellungen: Einstellungen,
+  /* Die Rechnung als PDF. Sie geht an den Kunden UND an den Shop — der Shop
+     braucht sie für die Ablage, der Kunde, weil es seine Rechnung ist. Fehlt
+     sie, geht die Mail trotzdem raus; eine Bestellung ohne Bestätigung wäre
+     schlimmer als eine Bestätigung ohne Anhang. */
+  rechnung?: { dateiname: string; inhalt: Buffer } | null,
 ): Promise<{ kunde: boolean; shop: boolean }> => {
   const ergebnis = { kunde: false, shop: false }
 
@@ -553,6 +558,12 @@ export const bestellungVersenden = async (
   const bilder = await positionsBilder(payload, bestellung.items ?? [])
   const anhaenge = [logo, ...bilder].filter((a): a is Anhang => a !== null)
 
+  /* Das Rechnungs-PDF hängt ohne `cid` dran: Es wird nicht im Mailtext
+     eingebunden, sondern soll als Datei zum Herunterladen erscheinen. */
+  const mitRechnung = rechnung
+    ? [...anhaenge, { filename: rechnung.dateiname, content: rechnung.inhalt, contentType: 'application/pdf' }]
+    : anhaenge
+
   if (!logo) {
     payload.logger.warn('Logo für die E-Mail nicht gefunden — die Mail geht mit Schriftzug statt Bild raus.')
   }
@@ -564,7 +575,7 @@ export const bestellungVersenden = async (
         subject: `Ihre Bestellung ${bestellung.orderNumber ?? ''} bei ${marke}`,
         text: kundenText(bestellung, einstellungen, basis),
         html: kundenHtml(bestellung, einstellungen, basis, logo, bilder),
-        attachments: anhaenge,
+        attachments: mitRechnung,
       } as never)
       ergebnis.kunde = true
       payload.logger.info(`Bestellbestätigung an ${bestellung.email} verschickt.`)
@@ -584,7 +595,7 @@ export const bestellungVersenden = async (
         subject: `Neue Bestellung ${bestellung.orderNumber ?? ''} über ${formatPrice(bestellung.total ?? 0)}`,
         text: shopText(bestellung),
         html: shopHtml(bestellung, einstellungen, logo, bilder),
-        attachments: anhaenge,
+        attachments: mitRechnung,
       } as never)
       ergebnis.shop = true
       payload.logger.info(`Benachrichtigung an ${shopAdresse} verschickt.`)

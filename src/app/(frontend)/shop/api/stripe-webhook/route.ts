@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { getPayloadClient, getSiteSettings } from '../../../../../lib/payload'
 import { bestellungVersenden } from '../../../../../lib/mail'
+import { rechnungZurBestellung } from '../../../../../lib/rechnung-erzeugen'
 import { getStripe, isStripeConfigured } from '../../../../../lib/stripe'
 
 export const dynamic = 'force-dynamic'
@@ -81,6 +82,10 @@ export async function POST(request: Request) {
   const total = (session.amount_total ?? 0) / 100
   const gutscheinCode = typeof session.metadata?.couponCode === 'string' ? session.metadata.couponCode : null
   const address = session.collected_information?.shipping_details?.address ?? session.customer_details?.address
+  /* Stripe erhebt beide Anschriften (`billing_address_collection: 'required'`).
+     Die Rechnungsanschrift wurde bisher verworfen — auf der Rechnung muss aber
+     sie stehen, nicht die Lieferadresse. */
+  const rechnungsAnschrift = session.customer_details?.address
   const recipient = session.collected_information?.shipping_details?.name ?? session.customer_details?.name
 
   let bestellung: Record<string, any>
@@ -101,6 +106,15 @@ export async function POST(request: Request) {
               postalCode: address.postal_code ?? undefined,
               city: address.city ?? undefined,
               country: address.country ?? undefined,
+            }
+          : undefined,
+        billingAddress: rechnungsAnschrift
+          ? {
+              line1: rechnungsAnschrift.line1 ?? undefined,
+              line2: rechnungsAnschrift.line2 ?? undefined,
+              postalCode: rechnungsAnschrift.postal_code ?? undefined,
+              city: rechnungsAnschrift.city ?? undefined,
+              country: rechnungsAnschrift.country ?? undefined,
             }
           : undefined,
         items,
@@ -166,6 +180,30 @@ export async function POST(request: Request) {
     }
   }
 
+  /* Die Rechnung. Sie entsteht sofort mit der Bestellung, weil im Shop immer
+     direkt bezahlt wird — Rechnungs- und Leistungsdatum fallen damit zusammen.
+
+     Scheitert sie, bleibt die Bestellung bestehen und die Bestätigung geht
+     ohne Anhang raus. Ein Fehler an dieser Stelle würde Stripe zur erneuten
+     Zustellung veranlassen, die an der Dublettensperre endet — die Bestellung
+     wäre erfasst, die Rechnung trotzdem nicht da, und niemand bekäme es mit.
+     Stattdessen steht es im Protokoll, und die Rechnung lässt sich mit
+     `src/scripts/rechnungen-nachziehen.ts` nachholen. Im Backend von Hand geht
+     es nicht: Nummer, Jahr und laufende Nummer sind Pflicht und zugleich
+     schreibgeschützt. */
+  let rechnungsAnhang: { dateiname: string; inhalt: Buffer } | null = null
+  try {
+    const einstellungen = await getSiteSettings()
+    const { rechnung, pdf } = await rechnungZurBestellung(payload, bestellung, einstellungen as Record<string, any>)
+    rechnungsAnhang = { dateiname: `${rechnung.invoiceNumber}.pdf`, inhalt: pdf }
+    payload.logger.info(`Rechnung ${rechnung.invoiceNumber} zur Bestellung ${bestellung.orderNumber} angelegt.`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unbekannt'
+    payload.logger.error(
+      `Rechnung zur Bestellung ${bestellung.orderNumber} konnte nicht angelegt werden: ${message}`,
+    )
+  }
+
   /* Bestellbestätigung an den Kunden, Benachrichtigung an den Shop.
      Bewusst nach dem Speichern und bewusst ohne Auswirkung auf die Antwort:
      Scheitert der Mailversand, ist die Bestellung trotzdem erfasst. Würden wir
@@ -173,7 +211,7 @@ export async function POST(request: Request) {
      Dublettensperre — der Kunde bekäme davon nichts, der Shop nur Rauschen. */
   try {
     const settings = await getSiteSettings()
-    await bestellungVersenden(payload, bestellung, settings as Record<string, any>)
+    await bestellungVersenden(payload, bestellung, settings as Record<string, any>, rechnungsAnhang)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unbekannt'
     payload.logger.error(`Mailversand zur Bestellung ${bestellung.orderNumber} fehlgeschlagen: ${message}`)

@@ -73,6 +73,7 @@ export interface Config {
     dealers: Dealer;
     teams: Team;
     orders: Order;
+    invoices: Invoice;
     pages: Page;
     media: Media;
     users: User;
@@ -93,6 +94,7 @@ export interface Config {
     dealers: DealersSelect<false> | DealersSelect<true>;
     teams: TeamsSelect<false> | TeamsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -691,6 +693,16 @@ export interface Order {
     city?: string | null;
     country?: string | null;
   };
+  /**
+   * Von Stripe erhoben und meist mit der Lieferadresse identisch. Auf der Rechnung steht diese Anschrift, nicht die Lieferadresse — wer an eine Werkstatt oder als Geschenk liefern lässt, bekommt die Rechnung trotzdem auf den eigenen Namen.
+   */
+  billingAddress?: {
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    country?: string | null;
+  };
   items?:
     | {
         product?: (number | null) | Product;
@@ -721,6 +733,84 @@ export interface Order {
   customerNote?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Jede bezahlte Bestellung erzeugt eine Rechnung. Die Angaben stehen fest und lassen sich nicht ändern — eine falsche Rechnung wird storniert, nicht korrigiert.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  year: number;
+  sequence: number;
+  kind: 'invoice' | 'cancellation';
+  invoiceDate: string;
+  /**
+   * Wird gesetzt, sobald eine Stornorechnung zu dieser Rechnung besteht.
+   */
+  cancelled?: boolean | null;
+  netTotal?: number | null;
+  taxRate?: number | null;
+  taxTotal?: number | null;
+  grossTotal?: number | null;
+  itemsGross?: number | null;
+  discountGross?: number | null;
+  shippingGross?: number | null;
+  couponCode?: string | null;
+  items?:
+    | {
+        title?: string | null;
+        sku?: string | null;
+        quantity?: number | null;
+        unitPrice?: number | null;
+        lineTotal?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  customerName?: string | null;
+  email?: string | null;
+  address?: {
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    country?: string | null;
+  };
+  order?: (number | null) | Order;
+  /**
+   * Als Abschrift, damit die Rechnung auch ohne die Bestellung vollständig ist.
+   */
+  orderNumber?: string | null;
+  /**
+   * Gezahlt wird im Shop immer sofort; dieses Datum ist zugleich das Leistungsdatum.
+   */
+  paidAt?: string | null;
+  /**
+   * Payment Intent bei Stripe.
+   */
+  paymentReference?: string | null;
+  /**
+   * Nur bei einer Stornorechnung gefüllt.
+   */
+  cancels?: (number | null) | Invoice;
+  /**
+   * Nur bei einer stornierten Rechnung gefüllt.
+   */
+  cancelledBy?: (number | null) | Invoice;
+  cancellationReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * Freie Textseiten wie Datenschutz, Impressum und AGB.
@@ -837,6 +927,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
       } | null)
     | ({
         relationTo: 'pages';
@@ -1170,6 +1264,15 @@ export interface OrdersSelect<T extends boolean = true> {
         city?: T;
         country?: T;
       };
+  billingAddress?:
+    | T
+    | {
+        line1?: T;
+        line2?: T;
+        postalCode?: T;
+        city?: T;
+        country?: T;
+      };
   items?:
     | T
     | {
@@ -1196,6 +1299,65 @@ export interface OrdersSelect<T extends boolean = true> {
   customerNote?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  invoiceNumber?: T;
+  year?: T;
+  sequence?: T;
+  kind?: T;
+  invoiceDate?: T;
+  cancelled?: T;
+  netTotal?: T;
+  taxRate?: T;
+  taxTotal?: T;
+  grossTotal?: T;
+  itemsGross?: T;
+  discountGross?: T;
+  shippingGross?: T;
+  couponCode?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        sku?: T;
+        quantity?: T;
+        unitPrice?: T;
+        lineTotal?: T;
+        id?: T;
+      };
+  customerName?: T;
+  email?: T;
+  address?:
+    | T
+    | {
+        line1?: T;
+        line2?: T;
+        postalCode?: T;
+        city?: T;
+        country?: T;
+      };
+  order?: T;
+  orderNumber?: T;
+  paidAt?: T;
+  paymentReference?: T;
+  cancels?: T;
+  cancelledBy?: T;
+  cancellationReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1523,6 +1685,24 @@ export interface SiteSetting {
    * Erscheint im Footer. Leer lassen, wenn keine festen Zeiten genannt werden sollen.
    */
   openingHours?: string | null;
+  /**
+   * Steht auf jeder Rechnung. Muss mit dem Impressum übereinstimmen.
+   */
+  vatId?: string | null;
+  /**
+   * Nur nötig, wenn keine Umsatzsteuer-ID vorliegt. Eine der beiden Angaben muss auf der Rechnung stehen.
+   */
+  taxNumber?: string | null;
+  registerCourt?: string | null;
+  registerNumber?: string | null;
+  /**
+   * Erscheint im Fuß der Rechnung. Leer lassen, dann steht dort nichts.
+   */
+  managingDirector?: string | null;
+  /**
+   * Steht unter der Betragsaufstellung. Hier gehört hin, was für jede Rechnung gilt.
+   */
+  invoiceNote?: string | null;
   footerText?: string | null;
   footerColumns?:
     | {
@@ -1719,6 +1899,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   mobile?: T;
   email?: T;
   openingHours?: T;
+  vatId?: T;
+  taxNumber?: T;
+  registerCourt?: T;
+  registerNumber?: T;
+  managingDirector?: T;
+  invoiceNote?: T;
   footerText?: T;
   footerColumns?:
     | T

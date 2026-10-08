@@ -79,6 +79,52 @@ export const SiteSettings: GlobalConfig = {
               ],
             },
             { name: 'openingHours', type: 'text', label: 'Erreichbarkeit', admin: { description: 'Erscheint im Footer. Leer lassen, wenn keine festen Zeiten genannt werden sollen.' } },
+
+            /* --- Angaben für die Rechnung ---------------------------------
+               Diese Daten standen bisher nur als Fließtext im Impressum. Eine
+               Rechnung muss sie nach § 14 UStG führen, und zwar als Angaben,
+               die sich hier ändern lassen — fest im Code wären sie bei der
+               nächsten Änderung an zwei Stellen zu pflegen und an einer davon
+               vergessen. */
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'vatId',
+                  type: 'text',
+                  label: 'Umsatzsteuer-Identifikationsnummer',
+                  defaultValue: 'DE815509556',
+                  admin: { width: '50%', description: 'Steht auf jeder Rechnung. Muss mit dem Impressum übereinstimmen.' },
+                },
+                {
+                  name: 'taxNumber',
+                  type: 'text',
+                  label: 'Steuernummer',
+                  admin: { width: '50%', description: 'Nur nötig, wenn keine Umsatzsteuer-ID vorliegt. Eine der beiden Angaben muss auf der Rechnung stehen.' },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                { name: 'registerCourt', type: 'text', label: 'Registergericht', defaultValue: 'Amtsgericht Jena', admin: { width: '50%' } },
+                { name: 'registerNumber', type: 'text', label: 'Registernummer', defaultValue: 'HRB 510004', admin: { width: '50%' } },
+              ],
+            },
+            {
+              name: 'managingDirector',
+              type: 'text',
+              label: 'Geschäftsführung',
+              admin: { description: 'Erscheint im Fuß der Rechnung. Leer lassen, dann steht dort nichts.' },
+            },
+            {
+              name: 'invoiceNote',
+              type: 'textarea',
+              label: 'Schlusstext auf der Rechnung',
+              defaultValue:
+                'Der Rechnungsbetrag ist bereits bezahlt. Die Lieferung erfolgt innerhalb von 2 bis 4 Werktagen.',
+              admin: { description: 'Steht unter der Betragsaufstellung. Hier gehört hin, was für jede Rechnung gilt.' },
+            },
           ],
         },
         {

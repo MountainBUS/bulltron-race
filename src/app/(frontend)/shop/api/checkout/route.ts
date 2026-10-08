@@ -186,7 +186,11 @@ export async function POST(request: Request) {
       billing_address_collection: 'required',
       phone_number_collection: { enabled: true },
       shipping_address_collection: {
-        allowed_countries: allowedCountries.length > 0 ? allowedCountries : ['DE', 'AT', 'CH'],
+        /* Nur Deutschland. Die Rechnung weist 19 Prozent deutsche Umsatzsteuer
+           aus; eine Lieferung nach Österreich oder in die Schweiz bräuchte eine
+           andere Besteuerung. Verkauft wird dorthin laut Marco (08.10.2026) nur
+           direkt an Händler, nicht über diesen Shop. */
+        allowed_countries: allowedCountries.length > 0 ? allowedCountries : ['DE'],
       },
       shipping_options: [
         {

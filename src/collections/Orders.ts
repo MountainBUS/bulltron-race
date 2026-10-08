@@ -58,6 +58,27 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
+      name: 'billingAddress',
+      type: 'group',
+      label: 'Rechnungsadresse',
+      admin: {
+        description:
+          'Von Stripe erhoben und meist mit der Lieferadresse identisch. Auf der Rechnung steht diese Anschrift, nicht die Lieferadresse — wer an eine Werkstatt oder als Geschenk liefern lässt, bekommt die Rechnung trotzdem auf den eigenen Namen.',
+      },
+      fields: [
+        { name: 'line1', type: 'text', label: 'Straße und Hausnummer' },
+        { name: 'line2', type: 'text', label: 'Adresszusatz' },
+        {
+          type: 'row',
+          fields: [
+            { name: 'postalCode', type: 'text', label: 'PLZ', admin: { width: '30%' } },
+            { name: 'city', type: 'text', label: 'Ort', admin: { width: '40%' } },
+            { name: 'country', type: 'text', label: 'Land', admin: { width: '30%' } },
+          ],
+        },
+      ],
+    },
+    {
       name: 'items',
       type: 'array',
       label: 'Positionen',

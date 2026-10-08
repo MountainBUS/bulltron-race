@@ -437,11 +437,10 @@ export const seed = async () => {
       shippingCost: 17.9,
       freeShippingFrom: 0,
       taxRate: 19,
-      shippingCountries: [
-        { code: 'DE', name: 'Deutschland' },
-        { code: 'AT', name: 'Österreich' },
-        { code: 'CH', name: 'Schweiz' },
-      ],
+      /* Nur Deutschland: Die Rechnung weist 19 Prozent deutsche Umsatzsteuer
+         aus. Nach Österreich und in die Schweiz wird laut Marco (08.10.2026)
+         ausschließlich direkt an Händler verkauft, nicht über diesen Shop. */
+      shippingCountries: [{ code: 'DE', name: 'Deutschland' }],
       checkoutNote:
         'Lithium-Batterien sind Gefahrgut. Wir versenden ausschließlich über zugelassene Dienstleister in geprüfter Verpackung.',
       legal: {

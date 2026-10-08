@@ -12,6 +12,9 @@ import * as migration_20260925_074500_fahrer_am_fahrzeug from './20260925_074500
 import * as migration_20261006_121500_kategorien_mehrfach from './20261006_121500_kategorien_mehrfach';
 import * as migration_20261007_090000_bauform_varianten from './20261007_090000_bauform_varianten';
 import * as migration_20261008_070000_gutscheine from './20261008_070000_gutscheine';
+import * as migration_20261008_140000_rechnungen from './20261008_140000_rechnungen';
+import * as migration_20261008_160000_rechnungsadresse from './20261008_160000_rechnungsadresse';
+import * as migration_20261008_170000_sperrtabelle from './20261008_170000_sperrtabelle';
 
 export const migrations = [
   {
@@ -83,5 +86,20 @@ export const migrations = [
     up: migration_20261008_070000_gutscheine.up,
     down: migration_20261008_070000_gutscheine.down,
     name: '20261008_070000_gutscheine'
+  },
+  {
+    up: migration_20261008_140000_rechnungen.up,
+    down: migration_20261008_140000_rechnungen.down,
+    name: '20261008_140000_rechnungen'
+  },
+  {
+    up: migration_20261008_160000_rechnungsadresse.up,
+    down: migration_20261008_160000_rechnungsadresse.down,
+    name: '20261008_160000_rechnungsadresse'
+  },
+  {
+    up: migration_20261008_170000_sperrtabelle.up,
+    down: migration_20261008_170000_sperrtabelle.down,
+    name: '20261008_170000_sperrtabelle'
   },
 ];
