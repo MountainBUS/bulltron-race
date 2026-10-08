@@ -57,6 +57,9 @@ type Bestellung = {
   shippingAddress?: { line1?: string | null; line2?: string | null; postalCode?: string | null; city?: string | null; country?: string | null } | null
   items?: Position[] | null
   subtotal?: number | null
+  /* Als positive Zahl; wird vom Warenwert abgezogen. */
+  discount?: number | null
+  couponCode?: string | null
   shipping?: number | null
   total?: number | null
 }
@@ -296,6 +299,26 @@ const summenZeile = (bezeichnung: string, betrag: string, stark = false): string
   <td style="font-family:${SCHRIFT};font-size:${stark ? '21' : '14'}px;line-height:${stark ? '26' : '22'}px;font-weight:bold;color:${stark ? FARBE.rot : FARBE.text};padding:${stark ? '14' : '5'}px 0 ${stark ? '0' : '5'}px 0;text-align:right;white-space:nowrap;${stark ? `border-top:2px solid ${FARBE.kante};` : ''}">${sicher(betrag)}</td>
 </tr>`
 
+/**
+ * Die Rabattzeile — nur wenn ein Rabatt vorliegt.
+ *
+ * Ohne sie ging die Mail nicht auf: Zwischensumme plus Versand ergab mehr als
+ * der ausgewiesene Gesamtbetrag, weil der Abzug nirgends stand. Eine
+ * Bestätigung, deren Zahlen sich nicht addieren lassen, ist für den Kunden
+ * schlimmer als gar keine Aufschlüsselung.
+ */
+const rabattZeile = (b: Bestellung): string => {
+  const rabatt = Number(b.discount ?? 0)
+  if (!(rabatt > 0)) return ''
+  return summenZeile(b.couponCode ? `Rabatt (${b.couponCode})` : 'Rabatt', `−${formatPrice(rabatt)}`)
+}
+
+const rabattText = (b: Bestellung): string[] => {
+  const rabatt = Number(b.discount ?? 0)
+  if (!(rabatt > 0)) return []
+  return [`${b.couponCode ? `Rabatt (${b.couponCode})` : 'Rabatt'}: -${formatPrice(rabatt)}`]
+}
+
 const panel = (titel: string, zeilen: string): string => `
 <tr>
   <td style="padding:34px 32px 38px 32px">
@@ -413,6 +436,7 @@ export const kundenHtml = (
     <td style="padding:24px 32px 0 32px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${summenZeile('Zwischensumme', formatPrice(b.subtotal ?? 0))}
+        ${rabattZeile(b)}
         ${summenZeile('Versand', formatPrice(b.shipping ?? 0))}
         ${summenZeile('Gesamtbetrag', formatPrice(b.total ?? 0), true)}
       </table>
@@ -454,6 +478,7 @@ export const shopHtml = (b: Bestellung, e: Einstellungen, logo: Anhang | null, b
     <td style="padding:24px 32px 0 32px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${summenZeile('Zwischensumme', formatPrice(b.subtotal ?? 0))}
+        ${rabattZeile(b)}
         ${summenZeile('Versand', formatPrice(b.shipping ?? 0))}
         ${summenZeile('Gesamtbetrag', formatPrice(b.total ?? 0), true)}
       </table>
@@ -489,6 +514,7 @@ const kundenText = (b: Bestellung, e: Einstellungen, basis: string): string =>
     ...positionsText(b),
     '',
     `Zwischensumme: ${formatPrice(b.subtotal ?? 0)}`,
+    ...rabattText(b),
     `Versand: ${formatPrice(b.shipping ?? 0)}`,
     `Gesamtbetrag: ${formatPrice(b.total ?? 0)}`,
     e.priceNote ? String(e.priceNote) : '',
@@ -517,6 +543,7 @@ const shopText = (b: Bestellung): string =>
     ...positionsText(b),
     '',
     `Zwischensumme: ${formatPrice(b.subtotal ?? 0)}`,
+    ...rabattText(b),
     `Versand: ${formatPrice(b.shipping ?? 0)}`,
     `Gesamtbetrag: ${formatPrice(b.total ?? 0)}`,
     '',
