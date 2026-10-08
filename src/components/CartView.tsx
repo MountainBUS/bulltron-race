@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useCart } from './CartProvider'
 import { formatPrice } from '../lib/format'
@@ -15,7 +15,7 @@ type Props = {
 }
 
 export const CartView = ({ shippingCost, freeShippingFrom, note, priceNote }: Props) => {
-  const { items, setQuantity, remove, subtotal, ready } = useCart()
+  const { items, setQuantity, remove, subtotal, ready, gutschein } = useCart()
 
   if (!ready) {
     return <p className="muted">Warenkorb wird geladen …</p>
@@ -34,9 +34,15 @@ export const CartView = ({ shippingCost, freeShippingFrom, note, priceNote }: Pr
     )
   }
 
-  const shipping = calculateShipping(subtotal, { shippingCost, freeShippingFrom })
-  const total = subtotal + shipping
-  const missingForFree = freeShippingFrom > 0 ? freeShippingFrom - subtotal : 0
+  /* Die Reihenfolge ist Absicht und folgt dem, was der Kunde erwartet:
+     Der Rabatt geht vom Warenwert ab, der Versand kommt danach obendrauf. Die
+     Schwelle für kostenlosen Versand bemisst sich weiterhin am Warenwert VOR
+     dem Rabatt — sonst fiele der Versand durch einen Gutschein plötzlich wieder
+     an, und das verstünde zu Recht niemand. */
+  const rabatt = gutschein?.rabatt ?? 0
+  const shipping = gutschein?.versandfrei ? 0 : calculateShipping(subtotal, { shippingCost, freeShippingFrom })
+  const total = Math.max(subtotal - rabatt, 0) + shipping
+  const missingForFree = freeShippingFrom > 0 && !gutschein?.versandfrei ? freeShippingFrom - subtotal : 0
 
   return (
     <div className="cart-layout">
@@ -99,14 +105,26 @@ export const CartView = ({ shippingCost, freeShippingFrom, note, priceNote }: Pr
           <span>Zwischensumme</span>
           <span className="mono-num">{formatPrice(subtotal)}</span>
         </div>
+        {gutschein && rabatt > 0 ? (
+          <div className="summary__row summary__row--rabatt">
+            <span>
+              Rabatt <span className="summary__code">{gutschein.code}</span>
+            </span>
+            <span className="mono-num">−{formatPrice(rabatt)}</span>
+          </div>
+        ) : null}
         <div className="summary__row">
           <span>Versand</span>
+          {/* Dass der Versand durch den Gutschein entfällt, steht im Block
+              darunter mit Code und Beschriftung — hier genügt „kostenfrei". */}
           <span className="mono-num">{shipping === 0 ? 'kostenfrei' : formatPrice(shipping)}</span>
         </div>
         <div className="summary__row summary__row--total">
           <span>Gesamt</span>
           <span className="mono-num">{formatPrice(total)}</span>
         </div>
+
+        <GutscheinFeld />
 
         <p className="price-note" style={{ marginTop: '0.5rem' }}>{priceNote}</p>
 
@@ -126,5 +144,69 @@ export const CartView = ({ shippingCost, freeShippingFrom, note, priceNote }: Pr
         </p>
       </aside>
     </div>
+  )
+}
+
+/**
+ * Eingabe des Gutscheincodes.
+ *
+ * Geprüft wird ausschließlich auf dem Server; dieses Feld zeigt nur an, was von
+ * dort zurückkommt. Es rechnet selbst nichts und kennt die Bedingungen der
+ * Codes nicht — es könnte sie sonst jemand im Browser nachlesen.
+ */
+const GutscheinFeld = () => {
+  const { gutschein, gutscheinPruefung, gutscheinFehler, gutscheinEinloesen, gutscheinEntfernen } = useCart()
+  const [eingabe, setEingabe] = useState('')
+
+  if (gutschein) {
+    return (
+      <div className="gutschein gutschein--aktiv">
+        <div>
+          <span className="gutschein__code">{gutschein.code}</span>
+          <span className="gutschein__text">{gutschein.beschriftung}</span>
+        </div>
+        <button type="button" className="gutschein__entfernen" onClick={gutscheinEntfernen}>
+          Entfernen
+        </button>
+      </div>
+    )
+  }
+
+  const absenden = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const erfolg = await gutscheinEinloesen(eingabe)
+    if (erfolg) setEingabe('')
+  }
+
+  return (
+    <form className="gutschein" onSubmit={absenden}>
+      <label className="gutschein__label" htmlFor="gutschein-code">
+        Gutscheincode
+      </label>
+      <div className="gutschein__reihe">
+        <input
+          id="gutschein-code"
+          type="text"
+          className="gutschein__eingabe"
+          value={eingabe}
+          onChange={(event) => setEingabe(event.target.value)}
+          placeholder="Code eingeben"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          disabled={gutscheinPruefung}
+          aria-describedby={gutscheinFehler ? 'gutschein-fehler' : undefined}
+          aria-invalid={gutscheinFehler ? true : undefined}
+        />
+        <button type="submit" className="btn btn--dark gutschein__knopf" disabled={gutscheinPruefung || !eingabe.trim()}>
+          {gutscheinPruefung ? 'Prüfe …' : 'Einlösen'}
+        </button>
+      </div>
+      {gutscheinFehler ? (
+        <p className="gutschein__fehler" id="gutschein-fehler" role="status">
+          {gutscheinFehler}
+        </p>
+      ) : null}
+    </form>
   )
 }

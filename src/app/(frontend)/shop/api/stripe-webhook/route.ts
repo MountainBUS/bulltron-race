@@ -68,8 +68,18 @@ export async function POST(request: Request) {
     }
   })
 
+  /* Die Summen kommen aus der Sitzung, nicht aus einer eigenen Rechnung:
+     Gezahlt ist, was Stripe abgerechnet hat.
+
+     `amount_subtotal` ist der Warenwert VOR Rabatt und ohne Versand. Vorher
+     stand hier `total - shipping`; mit einem Gutschein wäre das die bereits
+     verminderte Summe gewesen, und die Zwischensumme in der Bestellung hätte
+     nicht mehr zur Preisliste gepasst. */
   const shipping = (session.total_details?.amount_shipping ?? 0) / 100
+  const rabatt = (session.total_details?.amount_discount ?? 0) / 100
+  const subtotal = (session.amount_subtotal ?? 0) / 100
   const total = (session.amount_total ?? 0) / 100
+  const gutscheinCode = typeof session.metadata?.couponCode === 'string' ? session.metadata.couponCode : null
   const address = session.collected_information?.shipping_details?.address ?? session.customer_details?.address
   const recipient = session.collected_information?.shipping_details?.name ?? session.customer_details?.name
 
@@ -94,9 +104,11 @@ export async function POST(request: Request) {
             }
           : undefined,
         items,
-        subtotal: total - shipping,
+        subtotal,
+        discount: rabatt > 0 ? rabatt : undefined,
         shipping,
         total,
+        couponCode: gutscheinCode ?? undefined,
         stripe: {
           sessionId: session.id,
           paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id,
@@ -108,6 +120,50 @@ export async function POST(request: Request) {
     // Stripe wiederholt die Zustellung, wenn wir einen Fehler melden.
     const message = error instanceof Error ? error.message : 'unbekannt'
     return NextResponse.json({ error: `Bestellung konnte nicht gespeichert werden: ${message}` }, { status: 500 })
+  }
+
+  /* Die Einlösung zählen — erst jetzt, denn erst jetzt ist bezahlt.
+
+     GEZÄHLT, NICHT HOCHGEZÄHLT: Der Stand wird aus den Bestellungen mit diesem
+     Code ermittelt und dann gesetzt. Ein „lies den Wert, addiere eins, schreib
+     zurück" verlöre bei zwei gleichzeitigen Bestellungen eine davon; die
+     Zählung kann das nicht, weil die Bestellung vor dem Zählen schon in der
+     Datenbank steht. Nebenbei stimmt der Stand damit auch dann wieder, wenn
+     eine Bestellung von Hand gelöscht wird.
+
+     Ohne Auswirkung auf die Antwort: Scheitert das Zählen, ist die Bestellung
+     trotzdem erfasst. Ein Fehler hier würde Stripe zur erneuten Zustellung
+     veranlassen, die dann an der Dublettensperre endet — der Stand wäre
+     genauso falsch, nur mit mehr Rauschen. */
+  if (gutscheinCode) {
+    try {
+      const gutscheine = await payload.find({
+        collection: 'coupons',
+        where: { code: { equals: gutscheinCode } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      })
+      const gutschein = gutscheine.docs[0]
+      if (gutschein) {
+        const eingeloest = await payload.count({
+          collection: 'orders',
+          where: { couponCode: { equals: gutscheinCode } },
+          overrideAccess: true,
+        })
+        await payload.update({
+          collection: 'coupons',
+          id: gutschein.id,
+          data: { redemptions: eingeloest.totalDocs } as never,
+          overrideAccess: true,
+        })
+      } else {
+        payload.logger.warn(`Gutschein ${gutscheinCode} wurde eingelöst, steht aber nicht mehr im Backend.`)
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unbekannt'
+      payload.logger.error(`Einlösung von ${gutscheinCode} konnte nicht gezählt werden: ${message}`)
+    }
   }
 
   /* Bestellbestätigung an den Kunden, Benachrichtigung an den Shop.

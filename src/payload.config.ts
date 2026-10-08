@@ -10,6 +10,7 @@ import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
+import { Coupons } from './collections/Coupons'
 import { Products } from './collections/Products'
 import { Dealers } from './collections/Dealers'
 import { Teams } from './collections/Teams'
@@ -25,10 +26,10 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     /* Das Backend ist immer dunkel. Ohne diese Zeile gilt die Payload-Voreinstellung
-       'all': dann sucht die Oberfläche ein Cookie `payload-theme` und fällt, wenn
+       'all': dann sucht die Oberflaeche ein Cookie `payload-theme` und faellt, wenn
        keins da ist, auf die Betriebssystem-Einstellung des jeweiligen Rechners
-       zurück — das Backend sah deshalb je nach Gerät hell oder dunkel aus.
-       Mit 'dark' entfällt auch die Auswahl Automatisch/Hell/Dunkel im Benutzerkonto. */
+       zurueck — das Backend sah deshalb je nach Geraet hell oder dunkel aus.
+       Mit 'dark' entfaellt auch die Auswahl Automatisch/Hell/Dunkel im Benutzerkonto. */
     theme: 'dark',
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
@@ -44,7 +45,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Categories, Dealers, Teams, Orders, Pages, Media, Users],
+  collections: [Products, Categories, Coupons, Dealers, Teams, Orders, Pages, Media, Users],
   globals: [Home, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

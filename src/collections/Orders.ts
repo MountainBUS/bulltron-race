@@ -73,10 +73,20 @@ export const Orders: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'subtotal', type: 'number', label: 'Zwischensumme (€)', admin: { width: '33%' } },
-        { name: 'shipping', type: 'number', label: 'Versand (€)', admin: { width: '33%' } },
-        { name: 'total', type: 'number', label: 'Gesamt (€)', admin: { width: '34%' } },
+        { name: 'subtotal', type: 'number', label: 'Zwischensumme (€)', admin: { width: '25%' } },
+        { name: 'discount', type: 'number', label: 'Rabatt (€)', admin: { width: '25%', description: 'Als positive Zahl. Wird vom Warenwert abgezogen.' } },
+        { name: 'shipping', type: 'number', label: 'Versand (€)', admin: { width: '25%' } },
+        { name: 'total', type: 'number', label: 'Gesamt (€)', admin: { width: '25%' } },
       ],
+    },
+    {
+      name: 'couponCode',
+      type: 'text',
+      label: 'Eingelöster Gutscheincode',
+      admin: {
+        description:
+          'Steht hier ein Code, wurde er bei dieser Bestellung verwendet. Die Zahl „Bereits eingelöst" beim Gutschein selbst zählt genau diese Bestellungen.',
+      },
     },
     {
       name: 'stripe',

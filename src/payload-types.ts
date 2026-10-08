@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     products: Product;
     categories: Category;
+    coupons: Coupon;
     dealers: Dealer;
     teams: Team;
     orders: Order;
@@ -88,6 +89,7 @@ export interface Config {
   collectionsSelect: {
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    coupons: CouponsSelect<false> | CouponsSelect<true>;
     dealers: DealersSelect<false> | DealersSelect<true>;
     teams: TeamsSelect<false> | TeamsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
@@ -394,6 +396,66 @@ export interface Media {
   };
 }
 /**
+ * Codes, die Kundinnen und Kunden im Warenkorb eingeben können. Ein Code wirkt erst, wenn der Haken „Aktiv" gesetzt ist und alle Bedingungen erfüllt sind.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons".
+ */
+export interface Coupon {
+  id: number;
+  /**
+   * Was der Kunde eintippt. Groß- und Kleinschreibung spielt keine Rolle, der Code wird beim Speichern in Großbuchstaben umgewandelt. Leerzeichen werden entfernt.
+   */
+  code: string;
+  /**
+   * Aus: Der Code wird abgelehnt, egal was sonst eingestellt ist. So lässt sich ein Code sofort stoppen.
+   */
+  active?: boolean | null;
+  /**
+   * Zählt erst hoch, wenn eine Zahlung tatsächlich durch ist — nicht schon beim Eintippen.
+   */
+  redemptions?: number | null;
+  kind: 'percent' | 'amount' | 'shipping';
+  /**
+   * Zum Beispiel 10 für zehn Prozent. Der Versand bleibt davon unberührt.
+   */
+  percent?: number | null;
+  /**
+   * Zum Beispiel 25 für 25 Euro Nachlass. Ist der Warenkorb günstiger als der Betrag, wird höchstens der Warenwert abgezogen — es gibt nie Geld zurück.
+   */
+  amount?: number | null;
+  /**
+   * Leer lassen für sofort.
+   */
+  validFrom?: string | null;
+  /**
+   * Einschließlich dieses Tages. Leer lassen für unbegrenzt.
+   */
+  validUntil?: string | null;
+  /**
+   * Gemessen am Warenwert ohne Versand. Bei Codes für bestimmte Produkte zählt nur der Teil des Warenkorbs, für den der Code gilt.
+   */
+  minOrderValue?: number | null;
+  /**
+   * Leer lassen für unbegrenzt. Gezählt werden nur bezahlte Bestellungen.
+   */
+  maxRedemptions?: number | null;
+  /**
+   * Leer lassen, dann gilt der Code für das ganze Sortiment. Sind hier oder bei den Kategorien Einträge gesetzt, wird der Rabatt nur auf die passenden Artikel im Warenkorb gerechnet.
+   */
+  products?: (number | Product)[] | null;
+  /**
+   * Wirkt wie die Produktliste darüber, nur für ganze Kategorien. Beides zusammen ist ein Oder: Ein Artikel zählt, wenn er in der Produktliste steht oder in einer der Kategorien.
+   */
+  categories?: (number | Category)[] | null;
+  /**
+   * Wofür der Code gedacht ist, wer ihn bekommen hat. Nur im Backend sichtbar.
+   */
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Händler und Einbaupartner. Die Koordinaten für die Umkreissuche werden beim Speichern automatisch aus der Postleitzahl ermittelt (Deutschland, Österreich, Schweiz).
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -641,8 +703,16 @@ export interface Order {
       }[]
     | null;
   subtotal?: number | null;
+  /**
+   * Als positive Zahl. Wird vom Warenwert abgezogen.
+   */
+  discount?: number | null;
   shipping?: number | null;
   total?: number | null;
+  /**
+   * Steht hier ein Code, wurde er bei dieser Bestellung verwendet. Die Zahl „Bereits eingelöst" beim Gutschein selbst zählt genau diese Bestellungen.
+   */
+  couponCode?: string | null;
   stripe?: {
     sessionId?: string | null;
     paymentIntentId?: string | null;
@@ -751,6 +821,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'coupons';
+        value: number | Coupon;
       } | null)
     | ({
         relationTo: 'dealers';
@@ -938,6 +1012,27 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons_select".
+ */
+export interface CouponsSelect<T extends boolean = true> {
+  code?: T;
+  active?: T;
+  redemptions?: T;
+  kind?: T;
+  percent?: T;
+  amount?: T;
+  validFrom?: T;
+  validUntil?: T;
+  minOrderValue?: T;
+  maxRedemptions?: T;
+  products?: T;
+  categories?: T;
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "dealers_select".
  */
 export interface DealersSelect<T extends boolean = true> {
@@ -1087,8 +1182,10 @@ export interface OrdersSelect<T extends boolean = true> {
         id?: T;
       };
   subtotal?: T;
+  discount?: T;
   shipping?: T;
   total?: T;
+  couponCode?: T;
   stripe?:
     | T
     | {

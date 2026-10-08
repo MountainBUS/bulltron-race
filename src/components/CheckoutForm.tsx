@@ -16,7 +16,7 @@ type Props = {
 }
 
 export const CheckoutForm = ({ shippingCost, freeShippingFrom, priceNote, termsUrl, privacyUrl }: Props) => {
-  const { items, subtotal, ready } = useCart()
+  const { items, subtotal, ready, gutschein } = useCart()
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedWithdrawal, setAcceptedWithdrawal] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -37,8 +37,12 @@ export const CheckoutForm = ({ shippingCost, freeShippingFrom, priceNote, termsU
     )
   }
 
-  const shipping = calculateShipping(subtotal, { shippingCost, freeShippingFrom })
-  const total = subtotal + shipping
+  /* Gerechnet wie im Warenkorb. Verbindlich ist aber keine dieser Zahlen: Die
+     Kassenroute prüft den Code beim Anlegen der Stripe-Sitzung noch einmal und
+     rechnet mit den Preisen aus der Datenbank. */
+  const rabatt = gutschein?.rabatt ?? 0
+  const shipping = gutschein?.versandfrei ? 0 : calculateShipping(subtotal, { shippingCost, freeShippingFrom })
+  const total = Math.max(subtotal - rabatt, 0) + shipping
   const canSubmit = acceptedTerms && acceptedWithdrawal && !loading
 
   const submit = async () => {
@@ -50,6 +54,8 @@ export const CheckoutForm = ({ shippingCost, freeShippingFrom, priceNote, termsU
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map((item) => ({ id: item.id, quantity: item.quantity })),
+          /* Nur der Code. Was er wert ist, entscheidet der Server. */
+          gutschein: gutschein?.code ?? null,
         }),
       })
 
@@ -101,8 +107,18 @@ export const CheckoutForm = ({ shippingCost, freeShippingFrom, priceNote, termsU
           <span>Zwischensumme</span>
           <span className="mono-num">{formatPrice(subtotal)}</span>
         </div>
+        {gutschein && rabatt > 0 ? (
+          <div className="summary__row summary__row--rabatt">
+            <span>
+              Rabatt <span className="summary__code">{gutschein.code}</span>
+            </span>
+            <span className="mono-num">−{formatPrice(rabatt)}</span>
+          </div>
+        ) : null}
         <div className="summary__row">
           <span>Versand</span>
+          {/* Dass der Versand durch den Gutschein entfällt, steht im Block
+              darunter mit Code und Beschriftung — hier genügt „kostenfrei". */}
           <span className="mono-num">{shipping === 0 ? 'kostenfrei' : formatPrice(shipping)}</span>
         </div>
         <div className="summary__row summary__row--total">
