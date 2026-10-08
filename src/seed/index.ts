@@ -126,8 +126,11 @@ export const seed = async () => {
       faq: [
         {
           question: 'Brauche ich ein spezielles Ladegerät?',
+          /* Nein, so von Bulltron über Marco am 08.10.2026 bestätigt. Vorher
+             stand hier das Gegenteil, was der Kachel „Kein Spezialladegerät
+             nötig" auf der Startseite widersprach. */
           answer:
-            'Ja. Lithium-Batterien benötigen ein Ladegerät mit Lithium-Kennlinie. Ein klassisches Bleiladegerät lädt die Batterie nicht vollständig und kann die Lebensdauer verkürzen.',
+            'Nein. Zum Laden genügt ein handelsübliches Ladegerät, ein besonderes Lithium-Ladegerät ist nicht erforderlich.',
         },
         {
           question: 'Sind die Batterien für das Reglement meiner Rennserie zugelassen?',
@@ -204,7 +207,7 @@ export const seed = async () => {
         {
           question: 'Was mache ich im Winter?',
           answer:
-            'Lithium-Batterien haben eine geringe Selbstentladung und überstehen die Winterpause meist ohne Nachladen. Bei Standzeiten über mehrere Monate empfehlen wir trotzdem ein Erhaltungsladegerät mit Lithium-Kennlinie.',
+            'Lithium-Batterien haben eine geringe Selbstentladung und überstehen die Winterpause meist ohne Nachladen. Bei Standzeiten über mehrere Monate empfehlen wir trotzdem ein Erhaltungsladegerät.',
         },
         {
           question: 'Kann ich die Batterie liegend einbauen?',

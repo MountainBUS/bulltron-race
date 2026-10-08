@@ -54,7 +54,7 @@ const body = (intro: string, punkte: string[]) =>
     h('h3', 'Was diese Batterie auszeichnet'),
     ul(punkte),
     p(
-      'Hinweis: Lithium-Batterien benötigen ein passendes Ladeprofil. Verwende ein Ladegerät mit Lithium-Kennlinie oder sprich uns an — wir sagen dir, was zu deinem Fahrzeug passt.',
+      'Hinweis: Zum Laden genügt ein handelsübliches Ladegerät, ein besonderes Lithium-Ladegerät ist nicht erforderlich. Bei Fragen zum passenden Gerät sprich uns an — wir sagen dir, was zu deinem Fahrzeug passt.',
     ),
   ])
 
