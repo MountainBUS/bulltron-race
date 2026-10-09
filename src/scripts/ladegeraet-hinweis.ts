@@ -23,8 +23,17 @@ import config from '../payload.config'
 
 const payload = await getPayload({ config })
 
-const FAQ_ALT = 'Ja. Lithium-Batterien benötigen ein Ladegerät mit Lithium-Kennlinie. Ein klassisches Bleiladegerät lädt die Batterie nicht vollständig und kann die Lebensdauer verkürzen.'
-const FAQ_NEU = 'Nein. Zum Laden genügt ein handelsübliches Ladegerät, ein besonderes Lithium-Ladegerät ist nicht erforderlich.'
+/* Zwei Ausgangsfassungen werden ersetzt: die ursprüngliche Antwort („Ja …")
+   und die erste Korrektur vom 08.10.2026, die zwar richtig war, aber die
+   Ladeschlussspannung nicht nannte. Die Produkttexte führen diese Grenze
+   bereits — eine FAQ, die ungenauer ist als die Produktseite, nützt niemandem.
+   Der Wortlaut stammt von Bulltron selbst, aus dem Hinweis unter den
+   Produktbeschreibungen. */
+const FAQ_ALT = [
+  'Ja. Lithium-Batterien benötigen ein Ladegerät mit Lithium-Kennlinie. Ein klassisches Bleiladegerät lädt die Batterie nicht vollständig und kann die Lebensdauer verkürzen.',
+  'Nein. Zum Laden genügt ein handelsübliches Ladegerät, ein besonderes Lithium-Ladegerät ist nicht erforderlich.',
+]
+const FAQ_NEU = 'Nein. Unsere Batterien benötigen kein spezielles Lithium-Ladegerät. Du kannst jedes Ladegerät mit einer maximalen Ladespannung von 14,6 V verwenden.'
 
 const WINTER_ALT = 'Lithium-Batterien haben eine geringe Selbstentladung und überstehen die Winterpause meist ohne Nachladen. Bei Standzeiten über mehrere Monate empfehlen wir trotzdem ein Erhaltungsladegerät mit Lithium-Kennlinie.'
 const WINTER_NEU = 'Lithium-Batterien haben eine geringe Selbstentladung und überstehen die Winterpause meist ohne Nachladen. Bei Standzeiten über mehrere Monate empfehlen wir trotzdem ein Erhaltungsladegerät.'
@@ -42,7 +51,7 @@ for (const kategorie of kategorien.docs as Record<string, any>[]) {
   const faq = Array.isArray(kategorie.faq) ? kategorie.faq : []
   let getroffen = false
   const neu = faq.map((eintrag: Record<string, any>) => {
-    if (eintrag?.answer === FAQ_ALT) {
+    if (FAQ_ALT.includes(eintrag?.answer)) {
       getroffen = true
       return { ...eintrag, answer: FAQ_NEU }
     }

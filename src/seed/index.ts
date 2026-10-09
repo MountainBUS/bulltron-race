@@ -130,7 +130,7 @@ export const seed = async () => {
              stand hier das Gegenteil, was der Kachel „Kein Spezialladegerät
              nötig" auf der Startseite widersprach. */
           answer:
-            'Nein. Zum Laden genügt ein handelsübliches Ladegerät, ein besonderes Lithium-Ladegerät ist nicht erforderlich.',
+            'Nein. Unsere Batterien benötigen kein spezielles Lithium-Ladegerät. Du kannst jedes Ladegerät mit einer maximalen Ladespannung von 14,6 V verwenden.',
         },
         {
           question: 'Sind die Batterien für das Reglement meiner Rennserie zugelassen?',
