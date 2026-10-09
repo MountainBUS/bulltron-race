@@ -3,8 +3,13 @@
  *
  * Im Container ausführen:
  *   node_modules/.bin/payload run src/scripts/sicherung.ts
+ *   SICHERUNG_TEST=1 node_modules/.bin/payload run src/scripts/sicherung.ts
  *
- * Es entstehen zwei Dateien je Lauf, benannt nach Datum und Uhrzeit:
+ * Mit `SICHERUNG_TEST=1` wird NUR die Verbindung zum zweiten Ablageort geprüft und das
+ * Zielverzeichnis aufgelistet. Es entsteht keine Sicherung. Gedacht für das
+ * Einrichten: eine Zugangsdatenprüfung soll keine 90 MB kosten.
+ *
+ * Es entstehen sonst zwei Dateien je Lauf, benannt nach Datum und Uhrzeit:
  *
  *   <SICHERUNG_DIR>/bulltron-JJJJ-MM-TT-hhmm.db
  *   <SICHERUNG_DIR>/dateien-JJJJ-MM-TT-hhmm.tar.gz
@@ -20,28 +25,52 @@
  * die Datenbank ist dann gesichert und der Fehlschlag steht im Protokoll.
  *
  * Aufgeräumt wird nach Anzahl, nicht nach Alter: die jüngsten SICHERUNG_KEEP
- * Stände bleiben stehen (Vorgabe 14), ältere werden gelöscht. Ein Paar aus
- * Datenbank und Dateien zählt dabei als ein Stand.
+ * Stände bleiben stehen (Vorgabe 14), ältere werden gelöscht — lokal wie auf
+ * der Gegenstelle. Ein Paar aus Datenbank und Dateien zählt als ein Stand.
  *
- * ACHTUNG: Diese Sicherung liegt auf demselben Volume wie die Daten. Sie
- * schützt vor einer missglückten Migration, einem versehentlichen Löschen und
- * einer kaputten Einspielung — nicht vor dem Verlust des Volumes. Die Kopien
- * gehören zusätzlich vom Server herunter.
+ * Der zweite Ablageort läuft über FTP mit TLS (FTPS, explizit). Unverschlüsselt
+ * geht nichts hinaus: in der Sicherung stehen Namen, Anschriften und
+ * E-Mail-Adressen aller Kunden.
  */
 import { createClient } from '@libsql/client'
+import { Client as FtpClient } from 'basic-ftp'
 import { execFile } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
-import SftpClient from 'ssh2-sftp-client'
 
 const ausfuehren = promisify(execFile)
+
+/* Als Umgebungsvariable und nicht als Argument: `payload run` reicht keine
+   Argumente an das Skript durch — process.argv enthält dort nur den Node-Pfad
+   und den Pfad der Payload-CLI. Ein `--test` käme nie an. */
+const NUR_TEST = ['1', 'true', 'ja'].includes(String(process.env.SICHERUNG_TEST ?? '').toLowerCase())
 
 const DB_URI = process.env.DATABASE_URI || 'file:/data/bulltron.db'
 const MEDIEN = process.env.MEDIA_DIR || '/data/media'
 const ZIEL = process.env.SICHERUNG_DIR || '/data/sicherung'
 const BEHALTEN = Math.max(1, Number(process.env.SICHERUNG_KEEP ?? 14))
+
+/* Die Variablen hießen zuerst SICHERUNG_SFTP_*, weil der zweite Ablageort über
+   SSH laufen sollte. All-Inkl gibt SSH erst ab dem Premium-Tarif her, deshalb
+   jetzt FTPS. Die alten Namen werden weiter gelesen, damit eine bestehende
+   Einrichtung nicht stillschweigend aufhört zu arbeiten. */
+const umgebung = (name: string): string | undefined =>
+  process.env[`SICHERUNG_FTP_${name}`] ?? process.env[`SICHERUNG_SFTP_${name}`]
+
+const ftp = {
+  host: umgebung('HOST'),
+  port: Number(umgebung('PORT') ?? 21),
+  user: umgebung('USER'),
+  passwort: umgebung('PASSWORD'),
+  verzeichnis: umgebung('DIR') || '/sicherung',
+  /* Letzter Ausweg, wenn der Anbieter ein Zertifikat ausliefert, das nicht zum
+     Namen passt. Die Verbindung bleibt verschlüsselt, aber ungeprüft — und das
+     steht dann auch im Protokoll. */
+  tlsUngeprueft: ['1', 'true', 'ja'].includes(String(process.env.SICHERUNG_FTP_TLS_UNGEPRUEFT ?? '').toLowerCase()),
+}
+
+const altNamenGesetzt = !process.env.SICHERUNG_FTP_HOST && !!process.env.SICHERUNG_SFTP_HOST
 
 /** `file:/data/bulltron.db` und `file:./bulltron.db` ergeben beide den Pfad. */
 const dateipfad = (uri: string): string => (uri.startsWith('file:') ? uri.slice(5) : uri)
@@ -75,6 +104,75 @@ const groesse = async (datei: string): Promise<number> => {
     return 0
   }
 }
+
+const stempelMuster = /^(?:bulltron|dateien)-(\d{4}-\d{2}-\d{2}-\d{4})\.(?:db|tar\.gz)$/
+
+/**
+ * Baut die Verbindung auf und legt das Zielverzeichnis an, falls es fehlt.
+ * Der Aufrufer schließt die Verbindung.
+ */
+const verbinden = async (): Promise<FtpClient> => {
+  const client = new FtpClient(30_000)
+  await client.access({
+    host: ftp.host,
+    port: ftp.port,
+    user: ftp.user,
+    password: ftp.passwort,
+    /* `secure: true` ist explizites FTPS: Die Verbindung wird im Klartext
+       geöffnet und sofort per AUTH TLS verschlüsselt. Kann der Server das
+       nicht, scheitert der Aufbau — er fällt NICHT auf Klartext zurück. */
+    secure: true,
+    secureOptions: { rejectUnauthorized: !ftp.tlsUngeprueft },
+  })
+  if (ftp.tlsUngeprueft) {
+    console.log('  Hinweis: Das TLS-Zertifikat wird nicht geprüft (SICHERUNG_FTP_TLS_UNGEPRUEFT).')
+  }
+  await client.ensureDir(ftp.verzeichnis)
+  return client
+}
+
+// ---- Nur die Verbindung prüfen --------------------------------------------
+
+if (NUR_TEST) {
+  if (!ftp.host || !ftp.user || !ftp.passwort) {
+    console.error('Es fehlen SICHERUNG_FTP_HOST, SICHERUNG_FTP_USER oder SICHERUNG_FTP_PASSWORD.')
+    process.exit(1)
+  }
+  console.log(`Verbindungstest: ${ftp.user}@${ftp.host}:${ftp.port}${ftp.verzeichnis}`)
+  if (altNamenGesetzt) console.log('  (gelesen aus den alten SICHERUNG_SFTP_*-Variablen)')
+
+  const client = new FtpClient(30_000)
+  try {
+    await client.access({
+      host: ftp.host,
+      port: ftp.port,
+      user: ftp.user,
+      password: ftp.passwort,
+      secure: true,
+      secureOptions: { rejectUnauthorized: !ftp.tlsUngeprueft },
+    })
+    console.log(`  Angemeldet. Startverzeichnis: ${await client.pwd()}`)
+
+    await client.ensureDir(ftp.verzeichnis)
+    console.log(`  Zielverzeichnis erreichbar: ${await client.pwd()}`)
+
+    const liste = await client.list()
+    console.log(`  Enthält ${liste.length} Einträge.`)
+    for (const eintrag of liste.slice(0, 5)) console.log(`    ${eintrag.name}`)
+    if (liste.length > 5) console.log(`    … und ${liste.length - 5} weitere`)
+
+    console.log('\nDie Verbindung steht. Jetzt ohne SICHERUNG_TEST laufen lassen.')
+    client.close()
+    process.exit(0)
+  } catch (fehler) {
+    const text = fehler instanceof Error ? fehler.message : 'unbekannt'
+    console.error(`\nFehlgeschlagen: ${text}`)
+    client.close()
+    process.exit(1)
+  }
+}
+
+// ---- Vorbereitung ---------------------------------------------------------
 
 const quelle = dateipfad(DB_URI)
 const stempel = zeitstempel()
@@ -142,7 +240,6 @@ try {
    gehören die Datenbank und das Archiv. Gelöscht wird erst, wenn mehr als
    BEHALTEN Stände dastehen — und nie der Stand, der gerade entstanden ist. */
 const vorhanden = await readdir(zielAbs)
-const stempelMuster = /^(?:bulltron|dateien)-(\d{4}-\d{2}-\d{2}-\d{4})\.(?:db|tar\.gz)$/
 
 const staende = [...new Set(vorhanden.map((name) => name.match(stempelMuster)?.[1]).filter(Boolean) as string[])].sort()
 
@@ -168,71 +265,35 @@ console.log(`Fertig — ${staendeDanach} Stände in ${zielAbs}, zusammen etwa ${
 /* Ohne Zugangsdaten bleibt es bei der Kopie auf dem Server. Das ist ein
    gültiger Betriebszustand, kein Fehler — aber einer, der im Protokoll stehen
    muss, damit niemand die Sicherung für vollständig hält. */
-const sftp = {
-  host: process.env.SICHERUNG_SFTP_HOST,
-  port: Number(process.env.SICHERUNG_SFTP_PORT ?? 22),
-  user: process.env.SICHERUNG_SFTP_USER,
-  passwort: process.env.SICHERUNG_SFTP_PASSWORD,
-  verzeichnis: process.env.SICHERUNG_SFTP_DIR || '/sicherung',
-  fingerabdruck: process.env.SICHERUNG_SFTP_FINGERPRINT,
-}
+let hochgeladen: boolean | null = null
 
-let hochgeladen = sftp.host ? false : null
-
-if (!sftp.host || !sftp.user || !sftp.passwort) {
+if (!ftp.host || !ftp.user || !ftp.passwort) {
   console.log('\nZweiter Ablageort: nicht eingerichtet, die Sicherung liegt nur auf diesem Server.')
 } else {
-  const client = new SftpClient()
+  let client: FtpClient | null = null
   try {
-    await client.connect({
-      host: sftp.host,
-      port: sftp.port,
-      username: sftp.user,
-      password: sftp.passwort,
-      readyTimeout: 30_000,
-      /* Ohne diese Prüfung nimmt ssh2 jeden Schlüssel an, den die Gegenstelle
-         anbietet. Ist kein Fingerabdruck hinterlegt, laden wir trotzdem hoch,
-         schreiben den Abdruck aber ins Protokoll — einmal abgelesen und in
-         SICHERUNG_SFTP_FINGERPRINT eingetragen, ist die Verbindung ab dann an
-         genau diesen Server gebunden. */
-      hostVerifier: (schluessel: Buffer) => {
-        const abdruck = createHash('sha256').update(schluessel).digest('base64').replace(/=+$/, '')
-        if (!sftp.fingerabdruck) {
-          console.log(`  Fingerabdruck der Gegenstelle: SHA256:${abdruck}`)
-          console.log('  (ungeprüft — in SICHERUNG_SFTP_FINGERPRINT eintragen, dann wird er geprüft)')
-          return true
-        }
-        const erwartet = sftp.fingerabdruck.replace(/^SHA256:/, '').replace(/=+$/, '')
-        if (erwartet === abdruck) return true
-        console.error(`  Fingerabdruck passt nicht. Erwartet SHA256:${erwartet}, bekommen SHA256:${abdruck}`)
-        return false
-      },
-    })
+    console.log(`\nZweiter Ablageort: ${ftp.user}@${ftp.host}:${ftp.port}${ftp.verzeichnis}`)
+    if (altNamenGesetzt) console.log('  (gelesen aus den alten SICHERUNG_SFTP_*-Variablen)')
 
-    console.log(`\nZweiter Ablageort: ${sftp.user}@${sftp.host}:${sftp.verzeichnis}`)
-
-    if (!(await client.exists(sftp.verzeichnis))) {
-      await client.mkdir(sftp.verzeichnis, true)
-      console.log(`  Verzeichnis angelegt.`)
-    }
+    client = await verbinden()
 
     for (const datei of [dbZiel, tarZiel]) {
       if ((await groesse(datei)) === 0) continue
       const name = path.basename(datei)
-      await client.fastPut(datei, `${sftp.verzeichnis}/${name}`)
+      await client.uploadFrom(datei, name)
       console.log(`  Hochgeladen: ${name}`)
     }
 
     /* Dieselbe Regel wie lokal, sonst läuft der Webspace voll. Gelöscht wird
        nur, was dem eigenen Namensschema entspricht — was sonst in dem
        Verzeichnis liegt, bleibt unangetastet. */
-    const dort = (await client.list(sftp.verzeichnis)).map((e) => e.name)
+    const dort = (await client.list()).map((e) => e.name)
     const dortStaende = [
       ...new Set(dort.map((name) => name.match(stempelMuster)?.[1]).filter(Boolean) as string[]),
     ].sort()
     for (const alt of dortStaende.slice(0, Math.max(0, dortStaende.length - BEHALTEN)).filter((s) => s !== stempel)) {
       for (const name of dort.filter((n) => stempelMuster.test(n) && n.includes(`-${alt}.`))) {
-        await client.delete(`${sftp.verzeichnis}/${name}`)
+        await client.remove(name)
       }
       console.log(`  Entfernt: Stand ${alt}`)
     }
@@ -243,11 +304,7 @@ if (!sftp.host || !sftp.user || !sftp.passwort) {
     console.error(`\nDer zweite Ablageort war nicht erreichbar: ${text}`)
     hochgeladen = false
   } finally {
-    try {
-      await client.end()
-    } catch {
-      /* Beim Aufräumen einer schon gescheiterten Verbindung ist ein Fehler ohne Belang. */
-    }
+    client?.close()
   }
 }
 

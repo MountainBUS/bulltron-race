@@ -81,7 +81,7 @@ In Coolify bei der Anwendung unter *Scheduled Tasks* eine Aufgabe anlegen:
 Die Uhrzeit liegt bewusst nicht auf der vollen Stunde — dort drängen sich die
 geplanten Aufgaben aller Projekte auf dem Server.
 
-## Zweiter Ablageort: All-Inkl per SFTP
+## Zweiter Ablageort: All-Inkl per FTPS
 
 `/data/sicherung` liegt auf demselben Volume wie die Daten. Das schützt vor
 einer missglückten Migration, einem versehentlichen Löschen und einer kaputten
@@ -90,41 +90,61 @@ unterliegen in Deutschland einer langen Aufbewahrungspflicht; was genau gilt,
 sagt der Steuerberater. Eine einzige Kopie auf demselben Datenträger genügt in
 keiner Auslegung.
 
-Sind die folgenden Variablen gesetzt, lädt `sicherung.ts` beide Dateien am Ende
-des Laufs auf den All-Inkl-Webspace und räumt dort nach derselben Regel auf:
+Ursprünglich war SFTP vorgesehen. All-Inkl gibt SSH erst ab dem Premium-Tarif
+her, deshalb jetzt **FTP mit TLS (FTPS, explizit)**: Die Verbindung wird im
+Klartext geöffnet und sofort per `AUTH TLS` verschlüsselt. Kann der Server das
+nicht, scheitert der Aufbau — es gibt **keinen** Rückfall auf Klartext.
 
 | Variable | Pflicht | Bedeutung |
 |---|---|---|
-| `SICHERUNG_SFTP_HOST` | ja | z. B. `w0176ba0.kasserver.com` |
-| `SICHERUNG_SFTP_USER` | ja | der SSH-/SFTP-Benutzer aus dem KAS |
-| `SICHERUNG_SFTP_PASSWORD` | ja | dessen Passwort |
-| `SICHERUNG_SFTP_DIR` | nein | Zielverzeichnis, Vorgabe `/sicherung` |
-| `SICHERUNG_SFTP_PORT` | nein | Vorgabe 22 |
-| `SICHERUNG_SFTP_FINGERPRINT` | nein | Fingerabdruck des Wirtsschlüssels |
+| `SICHERUNG_FTP_HOST` | ja | z. B. `w0176ba0.kasserver.com` |
+| `SICHERUNG_FTP_USER` | ja | ein FTP-Benutzer aus dem KAS |
+| `SICHERUNG_FTP_PASSWORD` | ja | dessen Passwort |
+| `SICHERUNG_FTP_DIR` | nein | Zielverzeichnis, Vorgabe `/sicherung` |
+| `SICHERUNG_FTP_PORT` | nein | Vorgabe 21 |
+| `SICHERUNG_FTP_TLS_UNGEPRUEFT` | nein | `1` nimmt ein Zertifikat an, das nicht zum Namen passt |
+
+Die alten Namen `SICHERUNG_SFTP_*` werden weiterhin gelesen, damit eine
+bestehende Einrichtung nicht stillschweigend aufhört zu arbeiten. Das Protokoll
+sagt es, wenn sie greifen. Bei Gelegenheit umbenennen.
 
 Fehlen Host, Benutzer oder Passwort, bleibt es bei der Kopie auf dem Server und
 das Protokoll sagt das. Scheitert der Upload, obwohl er eingerichtet ist, endet
 der Lauf mit 1 — die lokale Sicherung ist dann trotzdem geschrieben.
 
+### Erst die Verbindung prüfen
+
+Eine Zugangsdatenprüfung soll keine 90 MB kosten:
+
+```
+SICHERUNG_TEST=1 node_modules/.bin/payload run src/scripts/sicherung.ts
+```
+
+Das baut nur die Verbindung auf, nennt das Startverzeichnis, legt das
+Zielverzeichnis an und listet es. Es entsteht keine Sicherung.
+
+Als Umgebungsvariable und nicht als Argument, weil `payload run` keine
+Argumente an das Skript durchreicht — `process.argv` enthält dort nur den
+Node-Pfad und den Pfad der Payload-CLI.
+
+Das ausgegebene Startverzeichnis sagt auch, wie `SICHERUNG_FTP_DIR` gemeint
+ist: Steht dort `/`, ist der Pfad relativ zum FTP-Heimatverzeichnis.
+
+### Zwei Dinge, die hier schiefgehen
+
 **Das Zielverzeichnis darf nicht im Web-Verzeichnis liegen.** In der Sicherung
 stehen Namen, Anschriften und E-Mail-Adressen aller Kunden. Läge sie unter
 `htdocs`, könnte sie jeder herunterladen, der den Dateinamen errät. Also ein
-Verzeichnis *neben* dem Web-Verzeichnis wählen, nicht darunter.
+Verzeichnis *neben* dem Web-Verzeichnis.
 
-Beim ersten Lauf steht der Fingerabdruck der Gegenstelle im Protokoll:
+**Das Zertifikat.** Passt das ausgelieferte Zertifikat nicht zum Hostnamen,
+bricht der Aufbau mit einer Zertifikatsmeldung ab. Erst dann ist
+`SICHERUNG_FTP_TLS_UNGEPRUEFT=1` ein Thema — die Verbindung bleibt verschlüsselt,
+nur nicht mehr überprüft, und das Protokoll weist in jedem Lauf darauf hin.
+Nicht vorsorglich setzen.
 
-```
-Fingerabdruck der Gegenstelle: SHA256:…
-(ungeprüft — in SICHERUNG_SFTP_FINGERPRINT eintragen, dann wird er geprüft)
-```
-
-Diesen Wert in `SICHERUNG_SFTP_FINGERPRINT` eintragen. Ab dann verbindet sich
-das Skript nur noch mit genau diesem Server; meldet sich jemand anders unter
-der Adresse, bricht es ab, statt die Kundendaten dorthin zu schicken.
-
-Falls All-Inkl für den Benutzer kein SSH/SFTP erlaubt, lässt sich das im KAS
-beim jeweiligen Zugang einschalten. Ohne SFTP bleibt nur FTP, und das möchte
-man für diese Daten nicht.
+Empfehlenswert ist ein eigener FTP-Benutzer im KAS, der nur auf das
+Sicherungsverzeichnis darf, statt des Haupt-FTP-Zugangs.
 
 ## Wiederherstellen
 
