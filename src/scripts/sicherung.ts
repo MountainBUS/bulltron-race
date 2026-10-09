@@ -30,9 +30,11 @@
  */
 import { createClient } from '@libsql/client'
 import { execFile } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
+import SftpClient from 'ssh2-sftp-client'
 
 const ausfuehren = promisify(execFile)
 
@@ -161,8 +163,100 @@ const staendeDanach = new Set(geblieben.map((name) => name.match(stempelMuster)?
 
 console.log(`Fertig — ${staendeDanach} Stände in ${zielAbs}, zusammen etwa ${lesbar(belegt)}.`)
 
+// ---- Zweiter Ablageort ----------------------------------------------------
+
+/* Ohne Zugangsdaten bleibt es bei der Kopie auf dem Server. Das ist ein
+   gültiger Betriebszustand, kein Fehler — aber einer, der im Protokoll stehen
+   muss, damit niemand die Sicherung für vollständig hält. */
+const sftp = {
+  host: process.env.SICHERUNG_SFTP_HOST,
+  port: Number(process.env.SICHERUNG_SFTP_PORT ?? 22),
+  user: process.env.SICHERUNG_SFTP_USER,
+  passwort: process.env.SICHERUNG_SFTP_PASSWORD,
+  verzeichnis: process.env.SICHERUNG_SFTP_DIR || '/sicherung',
+  fingerabdruck: process.env.SICHERUNG_SFTP_FINGERPRINT,
+}
+
+let hochgeladen = sftp.host ? false : null
+
+if (!sftp.host || !sftp.user || !sftp.passwort) {
+  console.log('\nZweiter Ablageort: nicht eingerichtet, die Sicherung liegt nur auf diesem Server.')
+} else {
+  const client = new SftpClient()
+  try {
+    await client.connect({
+      host: sftp.host,
+      port: sftp.port,
+      username: sftp.user,
+      password: sftp.passwort,
+      readyTimeout: 30_000,
+      /* Ohne diese Prüfung nimmt ssh2 jeden Schlüssel an, den die Gegenstelle
+         anbietet. Ist kein Fingerabdruck hinterlegt, laden wir trotzdem hoch,
+         schreiben den Abdruck aber ins Protokoll — einmal abgelesen und in
+         SICHERUNG_SFTP_FINGERPRINT eingetragen, ist die Verbindung ab dann an
+         genau diesen Server gebunden. */
+      hostVerifier: (schluessel: Buffer) => {
+        const abdruck = createHash('sha256').update(schluessel).digest('base64').replace(/=+$/, '')
+        if (!sftp.fingerabdruck) {
+          console.log(`  Fingerabdruck der Gegenstelle: SHA256:${abdruck}`)
+          console.log('  (ungeprüft — in SICHERUNG_SFTP_FINGERPRINT eintragen, dann wird er geprüft)')
+          return true
+        }
+        const erwartet = sftp.fingerabdruck.replace(/^SHA256:/, '').replace(/=+$/, '')
+        if (erwartet === abdruck) return true
+        console.error(`  Fingerabdruck passt nicht. Erwartet SHA256:${erwartet}, bekommen SHA256:${abdruck}`)
+        return false
+      },
+    })
+
+    console.log(`\nZweiter Ablageort: ${sftp.user}@${sftp.host}:${sftp.verzeichnis}`)
+
+    if (!(await client.exists(sftp.verzeichnis))) {
+      await client.mkdir(sftp.verzeichnis, true)
+      console.log(`  Verzeichnis angelegt.`)
+    }
+
+    for (const datei of [dbZiel, tarZiel]) {
+      if ((await groesse(datei)) === 0) continue
+      const name = path.basename(datei)
+      await client.fastPut(datei, `${sftp.verzeichnis}/${name}`)
+      console.log(`  Hochgeladen: ${name}`)
+    }
+
+    /* Dieselbe Regel wie lokal, sonst läuft der Webspace voll. Gelöscht wird
+       nur, was dem eigenen Namensschema entspricht — was sonst in dem
+       Verzeichnis liegt, bleibt unangetastet. */
+    const dort = (await client.list(sftp.verzeichnis)).map((e) => e.name)
+    const dortStaende = [
+      ...new Set(dort.map((name) => name.match(stempelMuster)?.[1]).filter(Boolean) as string[]),
+    ].sort()
+    for (const alt of dortStaende.slice(0, Math.max(0, dortStaende.length - BEHALTEN)).filter((s) => s !== stempel)) {
+      for (const name of dort.filter((n) => stempelMuster.test(n) && n.includes(`-${alt}.`))) {
+        await client.delete(`${sftp.verzeichnis}/${name}`)
+      }
+      console.log(`  Entfernt: Stand ${alt}`)
+    }
+
+    hochgeladen = true
+  } catch (fehler) {
+    const text = fehler instanceof Error ? fehler.message : 'unbekannt'
+    console.error(`\nDer zweite Ablageort war nicht erreichbar: ${text}`)
+    hochgeladen = false
+  } finally {
+    try {
+      await client.end()
+    } catch {
+      /* Beim Aufräumen einer schon gescheiterten Verbindung ist ein Fehler ohne Belang. */
+    }
+  }
+}
+
 /* Ein Fehlschlag muss sich im Rückgabewert zeigen, sonst meldet die geplante
    Aufgabe in Coolify Erfolg, obwohl nichts gesichert wurde. */
+if (hochgeladen === false) {
+  console.error('Die Sicherung liegt nur auf diesem Server.')
+  process.exit(1)
+}
 if (!dbGeschrieben) {
   console.error('Die Datenbank fehlt in dieser Sicherung.')
   process.exit(1)

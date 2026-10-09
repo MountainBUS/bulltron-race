@@ -81,18 +81,50 @@ In Coolify bei der Anwendung unter *Scheduled Tasks* eine Aufgabe anlegen:
 Die Uhrzeit liegt bewusst nicht auf der vollen Stunde — dort drängen sich die
 geplanten Aufgaben aller Projekte auf dem Server.
 
-## Die Sicherung gehört vom Server herunter
+## Zweiter Ablageort: All-Inkl per SFTP
 
 `/data/sicherung` liegt auf demselben Volume wie die Daten. Das schützt vor
 einer missglückten Migration, einem versehentlichen Löschen und einer kaputten
-Einspielung — **nicht vor dem Verlust des Volumes oder des Servers.**
+Einspielung — **nicht vor dem Verlust des Volumes oder des Servers.** Rechnungen
+unterliegen in Deutschland einer langen Aufbewahrungspflicht; was genau gilt,
+sagt der Steuerberater. Eine einzige Kopie auf demselben Datenträger genügt in
+keiner Auslegung.
 
-Rechnungen unterliegen in Deutschland einer langen Aufbewahrungspflicht; was
-genau gilt, sagt der Steuerberater. Eine einzige Kopie auf demselben Datenträger
-genügt in keiner Auslegung.
+Sind die folgenden Variablen gesetzt, lädt `sicherung.ts` beide Dateien am Ende
+des Laufs auf den All-Inkl-Webspace und räumt dort nach derselben Regel auf:
 
-Noch offen: ein zweiter Ablageort. In Frage kommen der S3-Speicher, den Coolify
-unter *S3 Storages* verwalten kann, oder der All-Inkl-Webspace.
+| Variable | Pflicht | Bedeutung |
+|---|---|---|
+| `SICHERUNG_SFTP_HOST` | ja | z. B. `w0176ba0.kasserver.com` |
+| `SICHERUNG_SFTP_USER` | ja | der SSH-/SFTP-Benutzer aus dem KAS |
+| `SICHERUNG_SFTP_PASSWORD` | ja | dessen Passwort |
+| `SICHERUNG_SFTP_DIR` | nein | Zielverzeichnis, Vorgabe `/sicherung` |
+| `SICHERUNG_SFTP_PORT` | nein | Vorgabe 22 |
+| `SICHERUNG_SFTP_FINGERPRINT` | nein | Fingerabdruck des Wirtsschlüssels |
+
+Fehlen Host, Benutzer oder Passwort, bleibt es bei der Kopie auf dem Server und
+das Protokoll sagt das. Scheitert der Upload, obwohl er eingerichtet ist, endet
+der Lauf mit 1 — die lokale Sicherung ist dann trotzdem geschrieben.
+
+**Das Zielverzeichnis darf nicht im Web-Verzeichnis liegen.** In der Sicherung
+stehen Namen, Anschriften und E-Mail-Adressen aller Kunden. Läge sie unter
+`htdocs`, könnte sie jeder herunterladen, der den Dateinamen errät. Also ein
+Verzeichnis *neben* dem Web-Verzeichnis wählen, nicht darunter.
+
+Beim ersten Lauf steht der Fingerabdruck der Gegenstelle im Protokoll:
+
+```
+Fingerabdruck der Gegenstelle: SHA256:…
+(ungeprüft — in SICHERUNG_SFTP_FINGERPRINT eintragen, dann wird er geprüft)
+```
+
+Diesen Wert in `SICHERUNG_SFTP_FINGERPRINT` eintragen. Ab dann verbindet sich
+das Skript nur noch mit genau diesem Server; meldet sich jemand anders unter
+der Adresse, bricht es ab, statt die Kundendaten dorthin zu schicken.
+
+Falls All-Inkl für den Benutzer kein SSH/SFTP erlaubt, lässt sich das im KAS
+beim jeweiligen Zugang einschalten. Ohne SFTP bleibt nur FTP, und das möchte
+man für diese Daten nicht.
 
 ## Wiederherstellen
 
