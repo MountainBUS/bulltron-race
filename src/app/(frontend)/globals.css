@@ -26,6 +26,17 @@
      Buttons, Links, Fokus, Hervorhebungen. */
   --primary: #e03e51;
   --primary-bright: #ec5c6c;
+  /* Rot, auf dem weisse Schrift steht. Das Markenrot selbst kommt bei weisser
+     Schrift nur auf 4,22 und verfehlt die geforderten 4,5 — gemessen am
+     13.10.2026 an sieben Stellen der Startseite, alle mit demselben Wert.
+
+     Warum nicht einfach --primary abdunkeln: Dasselbe Rot steht anderswo ALS
+     Schrift auf dunklem Grund, und dort ist der Abstand schon knapp (4,28 auf
+     --surface, 4,00 auf --surface-2, 3,61 auf --surface-3). Ein dunkleres Rot
+     haette diese Stellen verschlechtert. Die Farbe wird in zwei Richtungen
+     gezogen, also braucht es zwei Werte. */
+  --primary-deep: #d73c4e;
+  --primary-deeper: #c9384a;
   --primary-dim: rgba(224, 62, 81, 0.14);
 
   /* Akzent: Bulltron-Grün. Bestätigung, Verfügbarkeit, technische Signale. */
@@ -110,7 +121,7 @@ p:last-child { margin-bottom: 0; }
   outline-offset: 3px;
 }
 
-::selection { background: var(--primary); color: var(--on-primary); }
+::selection { background: var(--primary-deep); color: var(--on-primary); }
 
 /* --- Layout -------------------------------------------------------------- */
 .container {
@@ -170,7 +181,7 @@ p:last-child { margin-bottom: 0; }
 
 /* --- Buttons ------------------------------------------------------------- */
 .btn {
-  --btn-bg: var(--primary);
+  --btn-bg: var(--primary-deep);
   --btn-fg: var(--on-primary);
   display: inline-flex;
   align-items: center;
@@ -189,7 +200,7 @@ p:last-child { margin-bottom: 0; }
   transition: background 0.22s var(--ease), transform 0.22s var(--ease), color 0.22s;
   white-space: nowrap;
 }
-.btn:hover { background: var(--primary-bright); transform: translateY(-2px); }
+.btn:hover { background: var(--primary-deeper); transform: translateY(-2px); }
 .btn:active { transform: translateY(0); }
 
 .btn--ghost {
@@ -260,7 +271,7 @@ p:last-child { margin-bottom: 0; }
 
 /* --- Header -------------------------------------------------------------- */
 .announce {
-  background: var(--primary);
+  background: var(--primary-deep);
   color: var(--on-primary);
   font-family: var(--font-display);
   font-weight: 700;
@@ -649,7 +660,7 @@ p:last-child { margin-bottom: 0; }
   clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
   z-index: 2;
 }
-.badge--primary { background: var(--primary); color: var(--on-primary); }
+.badge--primary { background: var(--primary-deep); color: var(--on-primary); }
 .badge--static { position: static; clip-path: none; display: inline-block; }
 
 .product-card__body { padding: 1.4rem; display: flex; flex-direction: column; flex: 1; }
@@ -763,7 +774,7 @@ p:last-child { margin-bottom: 0; }
 .video-frame__icon {
   width: 68px; height: 68px;
   display: grid; place-items: center;
-  background: var(--primary);
+  background: var(--primary-deep);
   color: var(--on-primary);
   border-radius: 50%;
   transition: transform 0.3s var(--ease);
@@ -821,7 +832,7 @@ p:last-child { margin-bottom: 0; }
 .cta-band {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(115deg, var(--primary) 0%, #a02539 58%, var(--surface) 58.4%, var(--surface) 100%);
+  background: linear-gradient(115deg, var(--primary-deep) 0%, #a02539 58%, var(--surface) 58.4%, var(--surface) 100%);
 }
 .cta-band__inner {
   position: relative;
@@ -833,10 +844,10 @@ p:last-child { margin-bottom: 0; }
   padding-block: clamp(2.75rem, 5vw, 4rem);
 }
 .cta-band h2 { color: var(--on-primary); font-size: clamp(1.9rem, 3.6vw, 2.8rem); }
-.cta-band p { color: rgba(255, 255, 255, 0.86); font-weight: 500; max-width: 46ch; }
+.cta-band p { color: var(--on-primary); font-weight: 500; max-width: 46ch; }
 .cta-band__action { display: flex; justify-content: flex-end; }
 @media (max-width: 760px) {
-  .cta-band { background: linear-gradient(160deg, var(--primary), #a02539); }
+  .cta-band { background: linear-gradient(160deg, var(--primary-deep), #a02539); }
   .cta-band__action { justify-content: flex-start; }
 }
 
@@ -1283,7 +1294,7 @@ a.bauform__wahl:hover { border-color: var(--line-strong); background: var(--surf
 }
 .skip-link {
   position: absolute; top: -200px; left: 1rem; z-index: 200;
-  background: var(--primary); color: var(--on-primary); padding: 0.7rem 1.2rem; font-weight: 700;
+  background: var(--primary-deep); color: var(--on-primary); padding: 0.7rem 1.2rem; font-weight: 700;
 }
 .skip-link:focus { top: 1rem; }
 
@@ -1367,7 +1378,7 @@ main { flex: 1; }
 }
 .chip-filter:hover { color: var(--text); border-color: var(--primary); }
 .chip-filter--aktiv {
-  background: var(--primary);
+  background: var(--primary-deep);
   border-color: var(--primary);
   color: var(--on-primary);
 }
