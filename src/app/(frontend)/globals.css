@@ -624,8 +624,24 @@ p:last-child { margin-bottom: 0; }
   display: grid;
   place-items: center;
   padding: 0;
+  /* Scheinwerfer hinter dem Produkt.
+
+     Die Produktfotos sind freigestellt und die Gehaeuse sind schwarz — auf
+     dunklem Grund verschwindet die Silhouette. Vorher lag hier nur ein
+     schwaches Rot bei 16 Prozent; Rot hinter einem schwarzen Gehaeuse hebt
+     das Produkt aber nicht ab, es legt nur einen Farbschleier darueber.
+
+     Jetzt neutrales Oberlicht als Hauptlicht, das Markenrot nur noch als
+     Unterton darunter. Der Verlauf laeuft bis 85 Prozent aus statt abrupt zu
+     enden: Bei einem kuerzeren Auslauf bekam der Lichtkegel eine sichtbare
+     Ovalkante und sah aus wie ein aufgelegter Fleck statt wie Beleuchtung.
+
+     Alle Masse in Prozent, damit der Schein mit der Karte mitwaechst. Das
+     Raster arbeitet mit auto-fill ab 280px Mindestbreite, die Karte ist am
+     Telefon also kaum breiter als hier. */
   background:
-    radial-gradient(circle at 50% 55%, rgba(224, 62, 81, 0.16), transparent 68%),
+    radial-gradient(ellipse 92% 80% at 50% 42%, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 85%),
+    radial-gradient(circle at 50% 62%, rgba(224, 62, 81, 0.11), transparent 70%),
     linear-gradient(170deg, var(--surface-2), var(--surface));
   border-bottom: 1px solid var(--line);
   overflow: hidden;
@@ -635,6 +651,24 @@ p:last-child { margin-bottom: 0; }
    nachgemessen lief das Bild 68 px unten aus der Kachel heraus. Deshalb liegt
    es absolut in der Kachel, der Innenabstand sitzt am Bild selbst, und
    object-fit passt jedes Seitenverhaeltnis ein. */
+/* Standflaeche: ohne sie schwebt das freigestellte Produkt im Lichtkegel.
+   Der Schatten liegt UNTER dem Bild, deshalb bekommt das Bild seinerseits eine
+   Ebene — sonst verdeckte der Schatten dessen Unterkante. */
+.product-card__media::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 11%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.72), transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .product-card__media img {
   position: absolute;
   inset: 0;
@@ -643,6 +677,10 @@ p:last-child { margin-bottom: 0; }
   padding: 1.5rem;
   object-fit: contain;
   transition: transform 0.45s var(--ease);
+  z-index: 1;
+  /* Haarfeine helle Kontur entlang der echten Silhouette — moeglich, weil die
+     Produktfotos freigestellt sind. Trennt die Gehaeusekante vom Lichtkegel. */
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.45));
 }
 .product-card:hover .product-card__media img { transform: scale(1.06); }
 
@@ -893,13 +931,31 @@ p:last-child { margin-bottom: 0; }
   display: grid;
   place-items: center;
   padding: 0;
+  /* Wie bei der Produktkachel, nur auf das quadratische Feld angepasst:
+     flacher, weil hier mehr Hoehe zur Verfuegung steht. */
   background:
-    radial-gradient(circle at 50% 50%, rgba(224, 62, 81, 0.16), transparent 68%),
+    radial-gradient(ellipse 88% 76% at 50% 44%, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0) 84%),
+    radial-gradient(circle at 50% 56%, rgba(224, 62, 81, 0.11), transparent 70%),
     linear-gradient(165deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
   overflow: hidden;
 }
-.gallery__main img { position: absolute; inset: 0; width: 100%; height: 100%; padding: clamp(1.5rem, 4vw, 3rem); object-fit: contain; }
+.gallery__main::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  transform: translateX(-50%);
+  width: 62%;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.72), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gallery__main img { position: absolute; inset: 0; width: 100%; height: 100%; padding: clamp(1.5rem, 4vw, 3rem); object-fit: contain; z-index: 1; filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.45)); }
 .gallery__thumbs { display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .gallery__thumb {
   width: 84px; height: 84px;
