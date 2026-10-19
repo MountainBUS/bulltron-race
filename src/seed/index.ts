@@ -73,7 +73,10 @@ export const seed = async () => {
 
   const productImages: Record<string, number> = {}
   for (const product of seedProducts) {
-    if (productImages[product.image]) continue
+    /* Produkte ohne Foto sind erlaubt: Für die 118 Ah liegt keines vor, und ein
+       Foto einer anderen Kapazität wäre falsch — auf dem Etikett steht sie
+       drauf. Die Produktseite schreibt dann „Kein Produktbild hinterlegt". */
+    if (!product.image || productImages[product.image]) continue
     const media = await upload(product.image, `${product.title} — ${product.subtitle}`)
     productImages[product.image] = media.id as number
   }
@@ -272,7 +275,7 @@ export const seed = async () => {
         availability: 'on_request',
         deliveryTime: '2–4 Werktage',
         shippingNote: 'Versand als Gefahrgut über zugelassene Dienstleister.',
-        mainImage: productImages[product.image],
+        mainImage: product.image ? productImages[product.image] : undefined,
         video: product.video
           ? {
               url: product.video.url,

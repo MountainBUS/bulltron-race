@@ -2,17 +2,12 @@ import { withPayload } from '@payloadcms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* Die 118-Ah-Batterie steht nicht mehr in der Preisliste 08/2026. Die alte
-     Adresse bleibt erreichbar und führt auf die Übersicht, statt ins Leere. */
-  async redirects() {
-    return [
-      {
-        source: '/produkte/bulltron-race-118ah-lifepo4',
-        destination: '/produkte',
-        permanent: true,
-      },
-    ]
-  },
+  /* Hier stand bis zum 19.10.2026 eine 301 von
+     /produkte/bulltron-race-118ah-lifepo4 auf die Übersicht, weil die 118 Ah
+     nicht in der Preisliste 08/2026 stand. Sie steht in der Liste 06/2026 und
+     ist wieder im Sortiment, deshalb ist die Weiterleitung weg: Die Adresse
+     führt jetzt wieder auf das Produkt selbst. Eine Weiterleitung hätte
+     Vorrang vor der Produktseite und würde sie unerreichbar machen. */
   /* Die Medienroute lieferte Bilder ohne jede Angabe zur Zwischenspeicherung
      aus — kein Cache-Control, kein ETag, kein Last-Modified. Der Browser hatte
      damit keine Grundlage, ein Bild wiederzuverwenden: Gemessen am 13.10.2026

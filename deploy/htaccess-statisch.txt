@@ -30,10 +30,6 @@ DirectorySlash Off
   RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
   RewriteRule ^ /%1 [R=301,L]
 
-  # --- Ausgelaufene Modelle ---------------------------------------------
-  # Die 118-Ah-Batterie steht nicht mehr in der Preisliste 08/2026.
-  RewriteRule ^produkte/bulltron-race-118ah-lifepo4/?$ /produkte [R=301,L]
-
   # --- Schrägstrich am Ende entfernen ------------------------------------
   # /produkte/ und /produkte sollen dieselbe Adresse sein. Ohne diese Regel
   # liefert /produkte/ zwar die Übersicht, aber mit falschem Basispfad — alle
