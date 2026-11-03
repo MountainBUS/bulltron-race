@@ -124,3 +124,49 @@ export const getTeamBySlug = cache(async (slug: string) => {
   })
   return res.docs[0] ?? null
 })
+
+/* ------------------------------------------------------ Veranstaltungen -- */
+
+/**
+ * Alle sichtbaren Veranstaltungen, kommende wie vergangene.
+ *
+ * Es wird bewusst nicht nach Datum gefiltert: Vergangene bleiben stehen und
+ * rücken auf der Übersicht nur nach hinten. Die Aufteilung macht
+ * `aufgeteilt()` in lib/veranstaltungen.ts, damit „was ist vorbei" an genau
+ * einer Stelle entschieden wird.
+ */
+export const getEvents = cache(async () => {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'events',
+    where: { published: { equals: true } },
+    limit: 500,
+    sort: '-dateFrom',
+    depth: 2,
+  })
+  return res.docs
+})
+
+export const getEventBySlug = cache(async (slug: string) => {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'events',
+    where: { slug: { equals: slug }, published: { equals: true } },
+    limit: 1,
+    depth: 2,
+  })
+  return res.docs[0] ?? null
+})
+
+/** Die Veranstaltungen, an denen ein Team hängt. */
+export const getEventsForTeam = cache(async (teamId: string | number) => {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'events',
+    where: { published: { equals: true }, 'participants.team': { equals: teamId } },
+    limit: 200,
+    sort: '-dateFrom',
+    depth: 1,
+  })
+  return res.docs
+})

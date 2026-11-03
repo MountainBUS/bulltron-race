@@ -15,6 +15,7 @@ import { Invoices } from './collections/Invoices'
 import { Products } from './collections/Products'
 import { Dealers } from './collections/Dealers'
 import { Teams } from './collections/Teams'
+import { Events } from './collections/Events'
 import { Pages } from './collections/Pages'
 import { Orders } from './collections/Orders'
 import { Home } from './globals/Home'
@@ -46,7 +47,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Categories, Coupons, Dealers, Teams, Orders, Invoices, Pages, Media, Users],
+  collections: [Products, Categories, Coupons, Dealers, Teams, Events, Orders, Invoices, Pages, Media, Users],
   globals: [Home, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

@@ -72,6 +72,7 @@ export interface Config {
     coupons: Coupon;
     dealers: Dealer;
     teams: Team;
+    events: Event;
     orders: Order;
     invoices: Invoice;
     pages: Page;
@@ -93,6 +94,7 @@ export interface Config {
     coupons: CouponsSelect<false> | CouponsSelect<true>;
     dealers: DealersSelect<false> | DealersSelect<true>;
     teams: TeamsSelect<false> | TeamsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
@@ -674,6 +676,117 @@ export interface Team {
   createdAt: string;
 }
 /**
+ * Rennen, Messen und Trackdays. Ein Eintrag je Veranstaltung — teilnehmende Teams werden unten angehängt, nicht als eigener Termin am Team gepflegt. Jeder Eintrag bekommt eine eigene Seite unter /veranstaltungen.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  /**
+   * Wird automatisch aus dem Titel erzeugt, kann aber überschrieben werden.
+   */
+  slug: string;
+  published?: boolean | null;
+  /**
+   * Erscheint mit Rahmen und ganz oben bei den kommenden Terminen.
+   */
+  featured?: boolean | null;
+  kind: 'rennen' | 'messe' | 'trackday' | 'sonstiges';
+  /**
+   * Der Eintrag bleibt sichtbar und wird als abgesagt gekennzeichnet. Besser als löschen, solange jemand den Termin im Kalender haben könnte.
+   */
+  canceled?: boolean | null;
+  dateFrom: string;
+  /**
+   * Nur bei mehrtägigen Veranstaltungen ausfüllen, etwa einem Rennwochenende oder einer Messe.
+   */
+  dateTo?: string | null;
+  /**
+   * Zum Beispiel „German Time Attack Masters“ oder „Essen Motor Show“.
+   */
+  series?: string | null;
+  /**
+   * Zum Beispiel „Hockenheimring“ oder „Messe Essen“.
+   */
+  venue?: string | null;
+  city?: string | null;
+  country?: ('DE' | 'AT' | 'CH' | 'NL' | 'IT' | 'BE' | 'FR' | 'ES' | 'XX') | null;
+  /**
+   * Mit oder ohne https:// — wird beim Speichern ergänzt.
+   */
+  website?: string | null;
+  bulltron?: {
+    /**
+     * Setzt das Kennzeichen auf der Übersicht und macht den Eintrag über den Filter auffindbar.
+     */
+    present?: boolean | null;
+    /**
+     * Zum Beispiel „Halle 3, Stand C24“.
+     */
+    location?: string | null;
+    contact?: string | null;
+    /**
+     * Was es vor Ort gibt — Beratung, Batterien zum Mitnehmen, Vorführung. Erscheint auf der Veranstaltungsseite.
+     */
+    note?: string | null;
+  };
+  /**
+   * Welche unserer Rennteams hier antreten. Die Veranstaltung erscheint dadurch automatisch auf der jeweiligen Teamseite — der Termin muss dort nicht noch einmal eingetragen werden.
+   */
+  participants?:
+    | {
+        team: number | Team;
+        /**
+         * Was dieses Team hier macht, etwa „Radical SR3 als Race Taxi“ oder „Stand FOX Exhaustsystems“. Erscheint neben dem Teamnamen.
+         */
+        note?: string | null;
+        /**
+         * Nach der Veranstaltung nachtragen, etwa „P1 Klasse Pro“.
+         */
+        result?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Ein bis zwei Sätze. Erscheinen auf der Übersicht und als Beschreibung in Suchergebnissen.
+   */
+  shortDescription?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Ohne Bild bleibt auf der Übersicht der Markenhintergrund stehen.
+   */
+  mainImage?: (number | null) | Media;
+  gallery?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Nur im Backend sichtbar.
+   */
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Wird automatisch von Stripe befüllt. Zahlungsdaten liegen ausschließlich bei Stripe.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -923,6 +1036,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'teams';
         value: number | Team;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
       } | null)
     | ({
         relationTo: 'orders';
@@ -1233,6 +1350,54 @@ export interface TeamsSelect<T extends boolean = true> {
         id?: T;
       };
   logo?: T;
+  mainImage?: T;
+  gallery?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  published?: T;
+  featured?: T;
+  kind?: T;
+  canceled?: T;
+  dateFrom?: T;
+  dateTo?: T;
+  series?: T;
+  venue?: T;
+  city?: T;
+  country?: T;
+  website?: T;
+  bulltron?:
+    | T
+    | {
+        present?: T;
+        location?: T;
+        contact?: T;
+        note?: T;
+      };
+  participants?:
+    | T
+    | {
+        team?: T;
+        note?: T;
+        result?: T;
+        id?: T;
+      };
+  shortDescription?: T;
+  description?: T;
   mainImage?: T;
   gallery?:
     | T

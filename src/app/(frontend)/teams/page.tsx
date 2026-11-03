@@ -1,11 +1,12 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getTeams } from '../../../lib/payload'
+import { getEvents, getTeams } from '../../../lib/payload'
 import { mediaAlt, mediaUrl } from '../../../lib/media'
 import { IconArrow, IconMail, IconPhone } from '../../../components/Icons'
 import { ANFRAGE_MAIL, ANFRAGE_TEL } from '../../../lib/shop'
 import { kommendeTermine, teamDatum, zusammensetzen } from '../../../lib/teams'
+import { naechsteJeTeam, ortZeile, zeitraum } from '../../../lib/veranstaltungen'
 
 // Inhalte kommen aus dem Backend und sollen ohne Rebuild sichtbar werden.
 export const dynamic = 'force-dynamic'
@@ -18,15 +19,42 @@ export const metadata: Metadata = {
 }
 
 export default async function TeamsPage() {
-  const teams = await getTeams().catch(() => [])
+  const [teams, events] = await Promise.all([getTeams().catch(() => []), getEvents().catch(() => [])])
+  /* Der nächste Termin je Team kommt aus der Sammlung Veranstaltungen; das
+     Feld am Team bleibt als zweite Quelle, solange aus einer Fragebogenangabe
+     noch keine Veranstaltung geworden ist. */
+  const naechsteVeranstaltung = naechsteJeTeam(events as never[])
 
   let fahrerGesamt = 0
   for (const team of teams) {
     if (Array.isArray(team.drivers)) fahrerGesamt += team.drivers.length
   }
-  const naechsterTermin = teams
-    .flatMap((team) => kommendeTermine(team.upcoming as never[]).map((t: any) => ({ ...t, team })))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+  const naechsterTermin = [
+    ...teams.flatMap((team) =>
+      kommendeTermine(team.upcoming as never[]).map((t: any) => ({
+        zeit: new Date(t.date).getTime(),
+        wann: teamDatum(t.date),
+        was: t.event,
+        wo: t.track as string | null,
+        href: null as string | null,
+        team,
+      })),
+    ),
+    ...teams.flatMap((team) => {
+      const v: any = naechsteVeranstaltung.get(String(team.id))
+      if (!v) return []
+      return [
+        {
+          zeit: new Date(v.dateFrom).getTime(),
+          wann: zeitraum(v),
+          was: v.title as string,
+          wo: (ortZeile(v) || null) as string | null,
+          href: `/veranstaltungen/${v.slug}` as string | null,
+          team,
+        },
+      ]
+    }),
+  ].sort((a, b) => a.zeit - b.zeit)[0]
 
   return (
     <>
@@ -74,9 +102,13 @@ export default async function TeamsPage() {
       {naechsterTermin ? (
         <div className="container">
           <p className="notice notice--info" style={{ marginTop: '1.4rem' }}>
-            Nächster Renntermin: {teamDatum(naechsterTermin.date)} —{' '}
-            {naechsterTermin.event}
-            {naechsterTermin.track ? `, ${naechsterTermin.track}` : ''} mit{' '}
+            Nächster Renntermin: {naechsterTermin.wann} —{' '}
+            {naechsterTermin.href ? (
+              <Link href={naechsterTermin.href}>{naechsterTermin.was}</Link>
+            ) : (
+              naechsterTermin.was
+            )}
+            {naechsterTermin.wo ? `, ${naechsterTermin.wo}` : ''} mit{' '}
             <Link href={`/teams/${naechsterTermin.team.slug}`}>{naechsterTermin.team.teamName}</Link>
           </p>
         </div>
@@ -109,6 +141,17 @@ export default async function TeamsPage() {
                 const fahrzeuge = Array.isArray(team.vehicles) ? team.vehicles : []
                 const untertitel = zusammensetzen([team.series, team.location])
                 const termine = kommendeTermine(team.upcoming as never[])
+                /* Der frühere der beiden: die nächste Veranstaltung, an der
+                   das Team hängt, oder sein eigener Fragebogen-Termin. */
+                const naechsteV: any = naechsteVeranstaltung.get(String(team.id))
+                const naechsterStart = [
+                  ...(termine.length > 0
+                    ? [{ zeit: new Date((termine[0] as any).date).getTime(), wann: teamDatum((termine[0] as any).date), was: (termine[0] as any).event as string }]
+                    : []),
+                  ...(naechsteV
+                    ? [{ zeit: new Date(naechsteV.dateFrom).getTime(), wann: zeitraum(naechsteV), was: naechsteV.title as string }]
+                    : []),
+                ].sort((a, b) => a.zeit - b.zeit)[0]
 
                 return (
                   <article
@@ -153,10 +196,10 @@ export default async function TeamsPage() {
                         </p>
                       ) : null}
 
-                      {termine.length > 0 ? (
+                      {naechsterStart ? (
                         <p className="team-karte__termin">
-                          Nächster Start: {teamDatum((termine[0] as any).date)}
-                          {(termine[0] as any).event ? ` — ${(termine[0] as any).event}` : ''}
+                          Nächster Start: {naechsterStart.wann}
+                          {naechsterStart.was ? ` — ${naechsterStart.was}` : ''}
                         </p>
                       ) : null}
 

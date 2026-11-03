@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getTeamBySlug, getTeams } from '../../../../lib/payload'
+import { getEventsForTeam, getTeamBySlug, getTeams } from '../../../../lib/payload'
 import { mediaAlt, mediaUrl } from '../../../../lib/media'
 import { RichText } from '../../../../components/RichText'
 import { IconArrow, IconMail } from '../../../../components/Icons'
@@ -15,6 +15,7 @@ import {
   teamDatum,
   zusammensetzen,
 } from '../../../../lib/teams'
+import { ART_LABEL, kommendeFuerTeam, ortZeile, zeitraum } from '../../../../lib/veranstaltungen'
 
 // Inhalte kommen aus dem Backend und sollen ohne Rebuild sichtbar werden.
 export const dynamic = 'force-dynamic'
@@ -86,6 +87,35 @@ export default async function TeamDetailPage({ params }: Props) {
   const ergebnisse = ergebnisseSortiert(team.results as any[])
   const erfolge = listeOderNull(team.pastAchievements as any[])
   const termine = kommendeTermine(team.upcoming as any[])
+  /* Seit dem 03.11.2026 kommen die Termine aus der Sammlung Veranstaltungen:
+     dort steht jedes Rennen einmal, mit allen Teams daran. Das Feld am Team
+     bleibt als Eingang bestehen — dort landen die Angaben aus dem Fragebogen,
+     solange daraus keine Veranstaltung geworden ist. Beide Listen erscheinen
+     zusammen, nach Datum sortiert; die aus der Sammlung führen auf ihre
+     eigene Seite. */
+  const veranstaltungen = kommendeFuerTeam((await getEventsForTeam(team.id).catch(() => [])) as never[])
+  const kalender = [
+    ...veranstaltungen.map((v: any) => ({
+      schluessel: `v${v.id}`,
+      zeit: new Date(v.dateFrom).getTime(),
+      zeitraum: zeitraum(v),
+      art: ART_LABEL[v.kind] ?? ART_LABEL.sonstiges,
+      titel: v.title,
+      meta: [v.series, ortZeile(v)].filter(Boolean).join(' \u00b7 '),
+      href: `/veranstaltungen/${v.slug}`,
+      extern: null as string | null,
+    })),
+    ...termine.map((t: any, i: number) => ({
+      schluessel: `t${i}`,
+      zeit: new Date(t.date).getTime(),
+      zeitraum: teamDatum(t.date),
+      art: 'Termin',
+      titel: t.event,
+      meta: gefuellt(t.track) ? t.track : '',
+      href: null as string | null,
+      extern: gefuellt(t.url) ? (t.url as string) : null,
+    })),
+  ].sort((a, b) => a.zeit - b.zeit)
   const galerie = listeOderNull(team.gallery as any[])
   const links = listeOderNull(team.social as any[])
   const heroBild = mediaUrl(team.mainImage, 'hero')
@@ -331,7 +361,7 @@ export default async function TeamDetailPage({ params }: Props) {
       ) : null}
 
       {/* ------------------------------------------------ Termine ---------- */}
-      {termine.length > 0 ? (
+      {kalender.length > 0 ? (
         <section className="section section--alt section--tight">
           <div className="container">
             <div className="section-head">
@@ -339,33 +369,34 @@ export default async function TeamDetailPage({ params }: Props) {
               <h2 className="h-md">Kommende Renntermine</h2>
             </div>
 
-            <div className="table-wrap">
-              <table className="table-specs team-termine">
-                <thead>
-                  <tr>
-                    <th scope="col">Datum</th>
-                    <th scope="col">Veranstaltung</th>
-                    <th scope="col">Strecke / Ort</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {termine.map((t: any, i: number) => (
-                    <tr key={i}>
-                      <td className="mono-num">{teamDatum(t.date)}</td>
-                      <td>
-                        {gefuellt(t.url) ? (
-                          <a href={t.url} target="_blank" rel="noopener noreferrer">
-                            {t.event}
-                          </a>
-                        ) : (
-                          t.event
-                        )}
-                      </td>
-                      <td>{gefuellt(t.track) ? t.track : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="termin-liste">
+              {kalender.map((k) => (
+                <article className="termin" key={k.schluessel}>
+                  <div className="termin__datum">
+                    <span className="termin__zeitraum">{k.zeitraum}</span>
+                    <span className="termin__art">{k.art}</span>
+                  </div>
+                  <div className="termin__body">
+                    <h3 className="termin__titel">
+                      {k.href ? (
+                        <Link href={k.href}>{k.titel}</Link>
+                      ) : k.extern ? (
+                        <a href={k.extern} target="_blank" rel="noopener noreferrer">
+                          {k.titel}
+                        </a>
+                      ) : (
+                        k.titel
+                      )}
+                    </h3>
+                    {k.meta ? <p className="termin__meta">{k.meta}</p> : null}
+                  </div>
+                  {k.href ? (
+                    <Link href={k.href} className="link-arrow termin__mehr">
+                      Details <IconArrow />
+                    </Link>
+                  ) : null}
+                </article>
+              ))}
             </div>
           </div>
         </section>

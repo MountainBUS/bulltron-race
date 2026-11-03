@@ -15,6 +15,7 @@ import * as migration_20261008_070000_gutscheine from './20261008_070000_gutsche
 import * as migration_20261008_140000_rechnungen from './20261008_140000_rechnungen';
 import * as migration_20261008_160000_rechnungsadresse from './20261008_160000_rechnungsadresse';
 import * as migration_20261008_170000_sperrtabelle from './20261008_170000_sperrtabelle';
+import * as migration_20261103_090000_veranstaltungen from './20261103_090000_veranstaltungen';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261008_170000_sperrtabelle.up,
     down: migration_20261008_170000_sperrtabelle.down,
     name: '20261008_170000_sperrtabelle'
+  },
+  {
+    up: migration_20261103_090000_veranstaltungen.up,
+    down: migration_20261103_090000_veranstaltungen.down,
+    name: '20261103_090000_veranstaltungen'
   },
 ];

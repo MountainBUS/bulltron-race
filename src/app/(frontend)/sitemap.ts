@@ -1,16 +1,17 @@
 import type { MetadataRoute } from 'next'
-import { getAllPages, getCategories, getProducts, getTeams } from '../../lib/payload'
+import { getAllPages, getCategories, getEvents, getProducts, getTeams } from '../../lib/payload'
 
 // Inhalte kommen aus dem Backend und sollen ohne Rebuild sichtbar werden.
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-  const [products, categories, pages, teams] = await Promise.all([
+  const [products, categories, pages, teams, events] = await Promise.all([
     getProducts(),
     getCategories(),
     getAllPages(),
     getTeams().catch(() => []),
+    getEvents().catch(() => []),
   ])
 
   return [
@@ -18,6 +19,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/produkte`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${base}/haendler`, changeFrequency: 'weekly', priority: 0.6 },
     ...(teams.length > 0 ? [{ url: `${base}/teams`, changeFrequency: 'weekly' as const, priority: 0.6 }] : []),
+    ...(events.length > 0 ? [{ url: `${base}/veranstaltungen`, changeFrequency: 'weekly' as const, priority: 0.6 }] : []),
+    ...events.map((event) => ({
+      url: `${base}/veranstaltungen/${event.slug}`,
+      lastModified: event.updatedAt,
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    })),
     ...teams.map((team) => ({
       url: `${base}/teams/${team.slug}`,
       lastModified: team.updatedAt,
